@@ -5,7 +5,7 @@ local Settings = {}
 local Threads = {}
 local Fallback = {}
 
-local Owner = "imdogkung3"
+local Owner = "vita6it"
 local Repository = "Xynapse"
 
 local THREAD_HASH = tostring(os.clock() + math.random()) do
@@ -75,10 +75,10 @@ AddModule("Configurations", function()
     local readfile = readfile or function( ... ) return ... end
     local isfile = isfile or function( ... ) return ... end
 
+    Configurations.FullPaths = `{Configurations.Set}/{PlaceId}.json`
+    Configurations.Paths = { Files, Configurations.Set }
     Configurations.Files = Files or "XYN"
     Configurations.Set = `{Files}/settings`
-    Configurations.Paths = { Files, Configurations.Set }
-    Configurations.FullPaths = `{Configurations.Set}/{PlaceId}.json`
 
     do
         function Configurations:Folder()
@@ -94,7 +94,6 @@ AddModule("Configurations", function()
         function Configurations:Default(index, value)
             if Settings[index] == nil then
                 Settings[index] = value
-                self:Save()
             end
         end
 
@@ -103,29 +102,30 @@ AddModule("Configurations", function()
                 Settings[index] = value
             end
 
-            self:Folder()
+            if not isfolder(Files) then
+                makefolder(Files)
+            end
+
+            if not isfolder(Configurations.Set) then
+                makefolder(Configurations.Set)
+            end
 
             writefile(Configurations.FullPaths, HttpService:JSONEncode(Settings))
         end
 
         function Configurations:Load()
-            self:Folder()
-
             if not isfile(Configurations.FullPaths) then
                 self:Save()
             end
 
-            local Success, Error = pcall(function()
-                local Reader = readfile(Configurations.FullPaths)
-                return HttpService:JSONDecode(Reader)
-            end)
-
-            if Success and type(Error) == "table" then
-                return Error
+            local Reader = readfile(Configurations.FullPaths) do
+                return HttpService:JSONDecode(Reader) 
             end
-
-            return {}
         end 
+    end
+
+    do Configurations:Folder()
+        Configurations:Default("Success", true)
     end
 
     return Configurations
@@ -439,7 +439,8 @@ AddModule("Plugins", function()
     function Plugins:Section(Page, Info)
         return Page:Section({
             Header = Info[1],
-            Light = Info[2] or nil
+            Side = Info[2] or "left",
+            Light = Info[3] or nil
         })
     end
     
@@ -464,7 +465,7 @@ AddModule("Plugins", function()
                 
                 Settings[Flag] = value
                 Configurations:Save(Flag, value)
-                if Enabled then Enabled[Flag] = value end
+                Enabled[Flag] = value
 
                 if value then
                     Thread = task.spawn(function()
@@ -615,7 +616,6 @@ end)
 do
     Settings = Utils.Configurations:Load()
     Utils.Settings = Settings
-    Utils.Configurations:Default("Success", true)
 end
 
 return Utils
