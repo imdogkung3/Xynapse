@@ -242,7 +242,7 @@ return(function(Installer)
                 local Target = CustomCFrame or ToEnemy.PrimaryPart.CFrame
                 local MaxDistance = Distance or Settings['Bring Distance']
 
-                if not Cached.Bring[BringPositionTag] or (Target.Position - Cached.Bring[BringPositionTag].Position).Magnitude > 25 then
+                if not Cached.Bring[BringPositionTag] then
                     Cached.Bring[BringPositionTag] = Target
                 end
 
@@ -253,6 +253,7 @@ return(function(Installer)
 
                     if (SuperBring or Enemy.Name == Name)
                         and Enemy.Parent == Enemies
+                        and not Enemy:HasTag(BRING_TAG)
                         and Enemy:FindFirstChild("CharacterReady") then
 
                         local PrimaryPart = Enemy.PrimaryPart
@@ -261,6 +262,7 @@ return(function(Installer)
                             if LocalPlayer:DistanceFromCharacter(PrimaryPart.Position) < MaxDistance then
                                 Enemy.Humanoid.WalkSpeed = 0
                                 Enemy.Humanoid.JumpPower = 0
+                                Enemy:AddTag(BRING_TAG)
                             end
                         end
                     end
