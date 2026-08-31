@@ -5,7 +5,7 @@ local Settings = {}
 local Threads = {}
 local Fallback = {}
 
-local Owner = "vita6it"
+local Owner = "imdogkung3"
 local Repository = "Xynapse"
 
 local THREAD_HASH = tostring(os.clock() + math.random()) do
