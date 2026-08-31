@@ -249,7 +249,7 @@ function Library:Window(Args)
         Name = "Background",
         Parent = Xynpase_1,
         Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(0, 480, 0, 320),
+        Size = UDim2.new(0, 500, 0, 360),
         Selectable = false,
     })
 
@@ -465,6 +465,7 @@ function Library:Window(Args)
                 Size = UDim2.new(1, 0, 1, 0),
                 ElasticBehavior = Enum.ElasticBehavior.Never,
                 ScrollBarThickness = 0,
+                ScrollingDirection = Enum.ScrollingDirection.Y, -- ล็อกให้เลื่อนเฉพาะแนวตั้ง
                 Visible = false,
                 ScrollBarImageTransparency = 1,
                 BorderSizePixel = 0,
@@ -475,6 +476,7 @@ function Library:Window(Args)
                 BackgroundTransparency = 1,
                 Name = "LeftColumn",
                 Parent = NewPages_1,
+                Position = UDim2.new(0, 0, 0, 0),
                 Size = UDim2.new(0.5, -5, 0, 0),
                 AutomaticSize = Enum.AutomaticSize.Y,
             })
@@ -504,7 +506,7 @@ function Library:Window(Args)
                 local leftHeight = LeftList.AbsoluteContentSize.Y
                 local rightHeight = RightList.AbsoluteContentSize.Y
                 local maxHeight = math.max(leftHeight, rightHeight)
-                NewPages_1.CanvasSize = UDim2.new(0, 0, 0, maxHeight + 15)
+                NewPages_1.CanvasSize = UDim2.new(0, 0, 0, maxHeight + 15) -- บังคับให้แกน X เป็น 0 ไม่ให้ไถลซ้าย-ขวา
             end
 
             LeftList:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(UpdateCanvas)
@@ -555,15 +557,17 @@ function Library:Window(Args)
             end
 
             function Tab:Section(Args)
-                local Header = Args.Header or "Header"
-                local Light = Args.Light or Color3.fromRGB(108, 108, 108)
-                local Side = Args.Side or "left"
+                local Header = type(Args) == "table" and (Args.Title or Args.Header or Args[1]) or Args
+                local Side = type(Args) == "table" and (Args.Side or Args[2]) or nil
+
+                local TargetColumn = GetSide(Side)
+                local Light = Color3.fromRGB(108, 108, 108)
 
                 local Section_1 = Library:Create("Frame", {
                     AutomaticSize = Enum.AutomaticSize.Y,
                     BackgroundColor3 = Color3.fromRGB(22, 22, 22),
                     Name = "Section",
-                    Parent = GetSide(Side),
+                    Parent = TargetColumn,
                     Size = UDim2.new(1, 0, 0, 0),
                     Selectable = false,
                 })
@@ -1288,6 +1292,7 @@ function Library:Window(Args)
                             Size = UDim2.new(1, 0, 1, -35),
                             ScrollBarImageTransparency = 1,
                             ScrollBarThickness = 0,
+                            ScrollingDirection = Enum.ScrollingDirection.Y,
                         })
 
                         local UIListLayout_3 = Library:Create("UIListLayout", {
