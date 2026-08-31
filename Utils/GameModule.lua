@@ -253,7 +253,6 @@ return(function(Installer)
 
                     if (SuperBring or Enemy.Name == Name)
                         and Enemy.Parent == Enemies
-                        and not Enemy:HasTag(BRING_TAG)
                         and Enemy:FindFirstChild("CharacterReady") then
 
                         local PrimaryPart = Enemy.PrimaryPart
@@ -262,7 +261,6 @@ return(function(Installer)
                             if LocalPlayer:DistanceFromCharacter(PrimaryPart.Position) < MaxDistance then
                                 Enemy.Humanoid.WalkSpeed = 0
                                 Enemy.Humanoid.JumpPower = 0
-                                Enemy:AddTag(BRING_TAG)
                             end
                         end
                     end
