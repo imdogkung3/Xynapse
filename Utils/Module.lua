@@ -75,10 +75,10 @@ AddModule("Configurations", function()
     local readfile = readfile or function( ... ) return ... end
     local isfile = isfile or function( ... ) return ... end
 
-    Configurations.FullPaths = `{Configurations.Set}/{PlaceId}.json`
-    Configurations.Paths = { Files, Configurations.Set }
     Configurations.Files = Files or "XYN"
     Configurations.Set = `{Files}/settings`
+    Configurations.Paths = { Files, Configurations.Set }
+    Configurations.FullPaths = `{Configurations.Set}/{(game and game.PlaceId) or PlaceId or 0}.json`
 
     do
         function Configurations:Folder()
@@ -92,13 +92,13 @@ AddModule("Configurations", function()
         end
 
         function Configurations:Default(index, value)
-            if Settings[index] == nil then
+            if Settings and Settings[index] == nil then
                 Settings[index] = value
             end
         end
 
         function Configurations:Save(index, value)
-            if index ~= nil then
+            if index ~= nil and Settings then
                 Settings[index] = value
             end
 
@@ -110,7 +110,7 @@ AddModule("Configurations", function()
                 makefolder(Configurations.Set)
             end
 
-            writefile(Configurations.FullPaths, HttpService:JSONEncode(Settings))
+            writefile(Configurations.FullPaths, HttpService:JSONEncode(Settings or {}))
         end
 
         function Configurations:Load()
