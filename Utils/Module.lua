@@ -439,8 +439,7 @@ AddModule("Plugins", function()
     function Plugins:Section(Page, Info)
         return Page:Section({
             Header = Info[1],
-            Side = Info[2] or "left",
-            Light = Info[3] or nil
+            Light = Info[2] or nil
         })
     end
     
