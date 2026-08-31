@@ -249,7 +249,7 @@ function Library:Window(Args)
         Name = "Background",
         Parent = Xynpase_1,
         Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.new(0, 475, 0, 360),
+        Size = UDim2.new(0, 480, 0, 320),
         Selectable = false,
     })
 
@@ -272,7 +272,6 @@ function Library:Window(Args)
         ZIndex = -999,
         Image = "rbxassetid://8992230677",
         ImageColor3 = Color3.fromRGB(0, 0, 0),
-        ImageContent = Content.fromUri("rbxassetid://8992230677"),
         ImageTransparency = 0.5,
         ScaleType = Enum.ScaleType.Slice,
         SliceCenter = Rect.new(99, 99, 99, 99),
@@ -471,16 +470,45 @@ function Library:Window(Args)
                 BorderSizePixel = 0,
             })
 
-            local UIListLayout_1 = Library:Create("UIListLayout", {
+            -- Dual Column Setup
+            local LeftColumn = Library:Create("Frame", {
+                BackgroundTransparency = 1,
+                Name = "LeftColumn",
                 Parent = NewPages_1,
+                Size = UDim2.new(0.5, -5, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y,
+            })
+
+            local RightColumn = Library:Create("Frame", {
+                BackgroundTransparency = 1,
+                Name = "RightColumn",
+                Parent = NewPages_1,
+                Position = UDim2.new(0.5, 5, 0, 0),
+                Size = UDim2.new(0.5, -5, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y,
+            })
+
+            local LeftList = Library:Create("UIListLayout", {
+                Parent = LeftColumn,
                 SortOrder = Enum.SortOrder.LayoutOrder,
-                HorizontalAlignment = Enum.HorizontalAlignment.Center,
                 Padding = UDim.new(0, 10),
             })
 
-            UIListLayout_1:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(function()
-                NewPages_1.CanvasSize = UDim2.new(0, 0, 0, UIListLayout_1.AbsoluteContentSize.Y + 15)
-            end)
+            local RightList = Library:Create("UIListLayout", {
+                Parent = RightColumn,
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDim.new(0, 10),
+            })
+
+            local function UpdateCanvas()
+                local leftHeight = LeftList.AbsoluteContentSize.Y
+                local rightHeight = RightList.AbsoluteContentSize.Y
+                local maxHeight = math.max(leftHeight, rightHeight)
+                NewPages_1.CanvasSize = UDim2.new(0, 0, 0, maxHeight + 15)
+            end
+
+            LeftList:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(UpdateCanvas)
+            RightList:GetPropertyChangedSignal('AbsoluteContentSize'):Connect(UpdateCanvas)
 
             Library:Create("UIPadding", {
                 Parent = NewPages_1,
@@ -512,15 +540,30 @@ function Library:Window(Args)
                 Library:Tween({ v = Asset_1, t = 0.5, s = "Exponential", d = "Out", g = { ImageTransparency = 0.1 } }):Play()
             end
 
+            local function GetSide(side)
+                if not side then
+                    return LeftColumn
+                end
+                local sideLower = string.lower(tostring(side))
+                if sideLower == "r" or sideLower == "right" or side == 2 then
+                    return RightColumn
+                elseif sideLower == "l" or sideLower == "left" or side == 1 then
+                    return LeftColumn
+                else
+                    return LeftColumn
+                end
+            end
+
             function Tab:Section(Args)
                 local Header = Args.Header or "Header"
                 local Light = Args.Light or Color3.fromRGB(108, 108, 108)
+                local Side = Args.Side or "left"
 
                 local Section_1 = Library:Create("Frame", {
                     AutomaticSize = Enum.AutomaticSize.Y,
                     BackgroundColor3 = Color3.fromRGB(22, 22, 22),
                     Name = "Section",
-                    Parent = NewPages_1,
+                    Parent = GetSide(Side),
                     Size = UDim2.new(1, 0, 0, 0),
                     Selectable = false,
                 })
@@ -946,7 +989,7 @@ function Library:Window(Args)
                             LayoutOrder = 100,
                             Name = "ScaleSlider",
                             Parent = Template.Right,
-                            Size = UDim2.new(0, 160, 1, 0),
+                            Size = UDim2.new(0, 100, 1, 0),
                             Selectable = false,
                         })
 
@@ -957,7 +1000,7 @@ function Library:Window(Args)
                             Name = "Slider",
                             Parent = ScaleSlider_1,
                             Position = UDim2.new(0.5, 0, 0.5, 0),
-                            Size = UDim2.new(0, 150, 0, 3),
+                            Size = UDim2.new(0, 90, 0, 3),
                             Selectable = false,
                         })
 
@@ -1044,7 +1087,7 @@ function Library:Window(Args)
                             local ratio = (val - Min) / (Max - Min)
                             Library:Tween({ v = Value_1, t = 0.1, s = "Linear", d = "Out", g = { Size = UDim2.new(ratio, 0, 1, 0) } }):Play()
                             TextValue_1.Text = tostring(val)
-                            Callback(val)
+                            if Callback then Callback(val) end
                             return val
                         end
 
@@ -1417,7 +1460,7 @@ function Library:Window(Args)
                                 end
                             end
 
-                            delay(0, function()
+                            task.delay(0, function()
                                 if IsMulti then
                                     if isValueInTable(Name, Value) then
                                         selectedOrder = selectedOrder - 1
