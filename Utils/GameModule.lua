@@ -242,9 +242,7 @@ return(function(Installer)
                 local Target = CustomCFrame or ToEnemy.PrimaryPart.CFrame
                 local MaxDistance = Distance or Settings['Bring Distance']
 
-                if not Cached.Bring[BringPositionTag] or (Target.Position - Cached.Bring[BringPositionTag].Position).Magnitude > 25 then
-                    Cached.Bring[BringPositionTag] = Target
-                end
+                Cached.Bring[BringPositionTag] = Target
 
                 local EnemyList = Enemies:GetChildren()
 
