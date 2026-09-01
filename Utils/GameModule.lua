@@ -706,10 +706,7 @@ return(function(Installer)
             "__CakePrince", "__PirateRaid", "__RaidBoss", "__TyrantSkies", "__Bones", "__Elite", "__Others", 
         }, {})
 
-        local SeaCastle = CFrame.new(-5556, 314, -2988) do
-            Cache.Enemies = {}
-            Cache.Bring =  {}
-        end
+        local SeaCastle = CFrame.new(-5556, 314, -2988)
 
         local TagsMobs = {
             __Elite = CreateDictionary({ "Deandre", "Diablo", "Urban", "Tyrant of the skies" }, true),
