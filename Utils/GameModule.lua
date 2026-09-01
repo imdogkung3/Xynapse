@@ -227,7 +227,59 @@ return(function(Installer)
             end
         end
 
-        function Module:BringEnemies(ToEnemy, SuperBring, CustomCFrame, Distance)
+function Module:BringEnemies(ToEnemy, SuperBring, CustomCFrame, Distance)
+    if not Module:IsAlive(ToEnemy) or not ToEnemy.PrimaryPart then
+        return nil
+    end
+
+    pcall(sethiddenproperty, LocalPlayer, "SimulationRadius", math.huge)
+
+    if Distance or Settings['Enabled Bring'] then
+        Module.IsSuperBring = SuperBring and true or false
+
+        local Name = ToEnemy.Name
+        local BringPositionTag = SuperBring and "ALL_MOBS" or Name
+        local Target = CustomCFrame or ToEnemy.PrimaryPart.CFrame
+        local MaxDistance = Distance or Settings['Bring Distance'] or 300
+
+        if not Cached.Bring[BringPositionTag] or (Target.Position - Cached.Bring[BringPositionTag].Position).Magnitude > 25 then
+            Cached.Bring[BringPositionTag] = Target
+        end
+
+        local EnemyList = (not SuperBring and self.EnemiesModule and self.EnemiesModule:GetTagged(Name)) or Enemies:GetChildren()
+
+        for i = 1, #EnemyList do
+            local Enemy = EnemyList[i]
+
+            if Enemy and Enemy.Parent == Enemies and Module:IsAlive(Enemy) then
+                if (SuperBring or Enemy.Name == Name) and Enemy:FindFirstChild("CharacterReady") then
+                    local PrimaryPart = Enemy.PrimaryPart
+                    if PrimaryPart then
+                        local Dist = (Target.Position - PrimaryPart.Position).Magnitude
+                        if Dist <= MaxDistance then
+                            if Enemy.Humanoid.WalkSpeed ~= 0 then
+                                Enemy.Humanoid.WalkSpeed = 0
+                                Enemy.Humanoid.JumpPower = 0
+                            end
+                            
+                            if not Enemy:HasTag(BRING_TAG) then
+                                Enemy:AddTag(BRING_TAG)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    else
+        if not Cached.Bring[ToEnemy] then
+            Cached.Bring[ToEnemy] = ToEnemy.PrimaryPart.CFrame
+        end
+
+        ToEnemy.PrimaryPart.CFrame = Cached.Bring[ToEnemy]
+    end
+end
+
+        function Module:BringEnemies2(ToEnemy, SuperBring, CustomCFrame, Distance)
             if not Module:IsAlive(ToEnemy) or not ToEnemy.PrimaryPart then
                 return nil
             end
@@ -242,9 +294,11 @@ return(function(Installer)
                 local Target = CustomCFrame or ToEnemy.PrimaryPart.CFrame
                 local MaxDistance = Distance or Settings['Bring Distance']
 
-                Cached.Bring[BringPositionTag] = Target
+                if not Cached.Bring[BringPositionTag] or (Target.Position - Cached.Bring[BringPositionTag].Position).Magnitude > 25 then
+                    Cached.Bring[BringPositionTag] = Target
+                end
 
-                local EnemyList = Enemies:GetChildren()
+                local EnemyList = (not SuperBring and self.EnemiesModule:GetTagged(Name)) or Enemies:GetChildren()
 
                 for i = 1, #EnemyList do
                     local Enemy = EnemyList[i]
