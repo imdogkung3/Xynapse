@@ -8,7 +8,7 @@ return(function(Installer)
         Enemies = {}
     }
 
-    local Owner = "imdogkung3"
+    local Owner = "vita6it"
     local Repository = "Xynapse"
 
     local Configuration = Installer.Configurations
@@ -702,7 +702,7 @@ return(function(Installer)
     end)
 
 
-NewModule("EnemiesModule", function()
+AddModule("EnemiesModule", function()
     local EnemiesModule = CreateDictionary({
         "__CakePrince", "__PirateRaid", "__RaidBoss", "__TyrantSkies", "__Bones", "__Elite", "__Others", 
     }, {})
@@ -949,7 +949,7 @@ NewModule("EnemiesModule", function()
     return EnemiesModule
 end)
 
-    AddModule("EnemiesModule222", function()
+    AddModule("EnemiesModule1+", function()
         local EnemiesModule = CreateDictionary({
             "__CakePrince", "__PirateRaid", "__RaidBoss", "__TyrantSkies", "__Bones", "__Elite", "__Others", 
         }, {})
