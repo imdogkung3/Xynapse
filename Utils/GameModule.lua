@@ -933,7 +933,7 @@ return(function(Installer)
 
                 local Target = Cached.Bring[Module.IsSuperBring and "ALL_MOBS" or EnemyName]
 
-                if Target and (Target.Position - RootPart.Position).Magnitude <= Settings["Bring Distance"] then
+                if Target then
                     if AlignPosition.Position ~= Target.Position then
                         AlignPosition.Position = Target.Position
                     end
