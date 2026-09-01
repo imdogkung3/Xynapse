@@ -75,10 +75,10 @@ AddModule("Configurations", function()
     local readfile = readfile or function( ... ) return ... end
     local isfile = isfile or function( ... ) return ... end
 
-    Configurations.FullPaths = `{Configurations.Set}/{PlaceId}.json`
-    Configurations.Paths = { Files, Configurations.Set }
     Configurations.Files = Files or "XYN"
     Configurations.Set = `{Files}/settings`
+    Configurations.Paths = { Files, Configurations.Set }
+    Configurations.FullPaths = `{Configurations.Set}/{PlaceId}.json`
 
     do
         function Configurations:Folder()
@@ -94,6 +94,7 @@ AddModule("Configurations", function()
         function Configurations:Default(index, value)
             if Settings[index] == nil then
                 Settings[index] = value
+                self:Save()
             end
         end
 
@@ -102,30 +103,29 @@ AddModule("Configurations", function()
                 Settings[index] = value
             end
 
-            if not isfolder(Files) then
-                makefolder(Files)
-            end
-
-            if not isfolder(Configurations.Set) then
-                makefolder(Configurations.Set)
-            end
+            self:Folder()
 
             writefile(Configurations.FullPaths, HttpService:JSONEncode(Settings))
         end
 
         function Configurations:Load()
+            self:Folder()
+
             if not isfile(Configurations.FullPaths) then
                 self:Save()
             end
 
-            local Reader = readfile(Configurations.FullPaths) do
-                return HttpService:JSONDecode(Reader) 
-            end
-        end 
-    end
+            local pcallSuccess, Result = pcall(function()
+                local Reader = readfile(Configurations.FullPaths)
+                return HttpService:JSONDecode(Reader)
+            end)
 
-    do Configurations:Folder()
-        Configurations:Default("Success", true)
+            if pcallSuccess and type(Result) == "table" then
+                return Result
+            end
+
+            return {}
+        end 
     end
 
     return Configurations
@@ -464,7 +464,7 @@ AddModule("Plugins", function()
                 
                 Settings[Flag] = value
                 Configurations:Save(Flag, value)
-                Enabled[Flag] = value
+                if Enabled then Enabled[Flag] = value end
 
                 if value then
                     Thread = task.spawn(function()
@@ -615,6 +615,7 @@ end)
 do
     Settings = Utils.Configurations:Load()
     Utils.Settings = Settings
+    Utils.Configurations:Default("Success", true)
 end
 
 return Utils
