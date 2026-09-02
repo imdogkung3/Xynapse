@@ -227,169 +227,7 @@ return(function(Installer)
             end
         end
 
-local BringDebug = {}
-
-local function DebugLog(...)
-    local Values = {...}
-
-    for i = 1, #Values do
-        Values[i] = tostring(Values[i])
-    end
-
-    local Text = table.concat(Values, " ")
-
-    BringDebug[#BringDebug + 1] = Text
-    print(Text)
-end
-
-local function CopyBringDebug()
-    local Text = table.concat(BringDebug, "\n")
-
-    if setclipboard then
-        setclipboard(Text)
-        print("[BRING DEBUG] COPIED TO CLIPBOARD")
-    elseif toclipboard then
-        toclipboard(Text)
-        print("[BRING DEBUG] COPIED TO CLIPBOARD")
-    else
-        warn("[BRING DEBUG] Clipboard not supported")
-    end
-end
-
-function Module:BringEnemies(ToEnemy, SuperBring, CustomCFrame, Distance)
-    BringDebug = {}
-
-    DebugLog("========== BRING START ==========")
-    DebugLog("ToEnemy:", ToEnemy)
-    DebugLog("Name:", ToEnemy and ToEnemy.Name)
-    DebugLog("SuperBring:", SuperBring)
-    DebugLog("Distance:", Distance)
-    DebugLog("Enabled Bring:", Settings["Enabled Bring"])
-    DebugLog("Bring Distance:", Settings["Bring Distance"])
-
-    if not ToEnemy then
-        DebugLog("[FAIL] ToEnemy NIL")
-        CopyBringDebug()
-        return nil
-    end
-
-    if not Module:IsAlive(ToEnemy) then
-        DebugLog("[FAIL] ToEnemy not alive")
-        CopyBringDebug()
-        return nil
-    end
-
-    if not ToEnemy.PrimaryPart then
-        DebugLog("[FAIL] ToEnemy PrimaryPart NIL")
-        CopyBringDebug()
-        return nil
-    end
-
-    DebugLog("[PASS] ToEnemy Alive")
-    DebugLog("[PASS] PrimaryPart:", ToEnemy.PrimaryPart.Name)
-
-    pcall(sethiddenproperty, LocalPlayer, "SimulationRadius", math.huge)
-
-    if Distance or Settings["Enabled Bring"] then
-        DebugLog("[PASS] Enter Bring Branch")
-
-        Module.IsSuperBring = SuperBring and true or false
-
-        local Name = ToEnemy.Name
-        local BringPositionTag = SuperBring and "ALL_MOBS" or Name
-        local Target = CustomCFrame or ToEnemy.PrimaryPart.CFrame
-        local MaxDistance = Distance or Settings["Bring Distance"]
-
-        DebugLog("Name:", Name)
-        DebugLog("BringPositionTag:", BringPositionTag)
-        DebugLog("MaxDistance:", MaxDistance)
-        DebugLog("Target:", Target)
-
-        if not Cached.Bring[BringPositionTag] then
-            Cached.Bring[BringPositionTag] = Target
-            DebugLog("[CACHE] Created")
-        else
-            local CacheDistance = (Target.Position - Cached.Bring[BringPositionTag].Position).Magnitude
-
-            DebugLog("[CACHE] Distance:", CacheDistance)
-
-            if CacheDistance > 25 then
-                Cached.Bring[BringPositionTag] = Target
-                DebugLog("[CACHE] Updated")
-            else
-                DebugLog("[CACHE] Using Old Position")
-            end
-        end
-
-        local EnemyList = (not SuperBring and self.EnemiesModule:GetTagged(Name)) or Enemies:GetChildren()
-
-        DebugLog("EnemyList Count:", #EnemyList)
-
-        for i = 1, #EnemyList do
-            local Enemy = EnemyList[i]
-
-            DebugLog("")
-            DebugLog("----- ENEMY", i, "-----")
-            DebugLog("Name:", Enemy.Name)
-            DebugLog("Parent == Enemies:", Enemy.Parent == Enemies)
-            DebugLog("Name Match:", SuperBring or Enemy.Name == Name)
-            DebugLog("Has Bring Tag:", Enemy:HasTag(BRING_TAG))
-            DebugLog("CharacterReady:", Enemy:FindFirstChild("CharacterReady") ~= nil)
-            DebugLog("IsAlive:", Module:IsAlive(Enemy))
-            DebugLog("PrimaryPart:", Enemy.PrimaryPart)
-
-            if (SuperBring or Enemy.Name == Name)
-                and Enemy.Parent == Enemies
-                and not Enemy:HasTag(BRING_TAG)
-                and Enemy:FindFirstChild("CharacterReady") then
-
-                local PrimaryPart = Enemy.PrimaryPart
-
-                if Module:IsAlive(Enemy) and PrimaryPart then
-                    local EnemyDistance = LocalPlayer:DistanceFromCharacter(PrimaryPart.Position)
-
-                    DebugLog("Distance:", EnemyDistance)
-                    DebugLog("MaxDistance:", MaxDistance)
-
-                    if EnemyDistance < MaxDistance then
-                        DebugLog("[PASS] Distance")
-
-                        Enemy.Humanoid.WalkSpeed = 0
-                        Enemy.Humanoid.JumpPower = 0
-
-                        Enemy:AddTag(BRING_TAG)
-
-                        DebugLog("[TAG] Added:", Enemy:HasTag(BRING_TAG))
-                    else
-                        DebugLog("[SKIP] Too Far")
-                    end
-                else
-                    DebugLog("[SKIP] Not Alive / PrimaryPart NIL")
-                end
-            else
-                DebugLog("[SKIP] Main Condition Failed")
-            end
-        end
-
-        DebugLog("========== BRING FINISHED ==========")
-
-    else
-        DebugLog("[FAIL] Bring Disabled / Distance NIL")
-
-        if not Cached.Bring[ToEnemy] then
-            Cached.Bring[ToEnemy] = ToEnemy.PrimaryPart.CFrame
-            DebugLog("[CACHE] Fallback Created")
-        end
-
-        ToEnemy.PrimaryPart.CFrame = Cached.Bring[ToEnemy]
-
-        DebugLog("[FALLBACK] Applied")
-    end
-
-    CopyBringDebug()
-end
-
-        function Module:BringEnemie22s(ToEnemy, SuperBring, CustomCFrame, Distance)
+        function Module:BringEnemies(ToEnemy, SuperBring, CustomCFrame, Distance)
             if not Module:IsAlive(ToEnemy) or not ToEnemy.PrimaryPart then
                 return nil
             end
@@ -415,7 +253,6 @@ end
 
                     if (SuperBring or Enemy.Name == Name)
                         and Enemy.Parent == Enemies
-                        and not Enemy:HasTag(BRING_TAG)
                         and Enemy:FindFirstChild("CharacterReady") then
 
                         local PrimaryPart = Enemy.PrimaryPart
@@ -424,7 +261,9 @@ end
                             if LocalPlayer:DistanceFromCharacter(PrimaryPart.Position) < MaxDistance then
                                 Enemy.Humanoid.WalkSpeed = 0
                                 Enemy.Humanoid.JumpPower = 0
-                                Enemy:AddTag(BRING_TAG)
+                                        if not Enemy:HasTag(BRING_TAG) then
+            Enemy:AddTag(BRING_TAG)
+        end
                             end
                         end
                     end
