@@ -242,8 +242,9 @@ return(function(Installer)
                 local Target = CustomCFrame or ToEnemy.PrimaryPart.CFrame
                 local MaxDistance = Distance or Settings['Bring Distance']
 
-               
+                if not Cached.Bring[BringPositionTag] or (Target.Position - Cached.Bring[BringPositionTag].Position).Magnitude > 25 then
                     Cached.Bring[BringPositionTag] = Target
+                end
 
                 local EnemyList = (not SuperBring and self.EnemiesModule:GetTagged(Name)) or Enemies:GetChildren()
 
@@ -917,7 +918,132 @@ return(function(Installer)
             return Nearest
         end
 
-        local function Bring(Enemy)
+local BringDebug = {}
+
+local function BringLog(...)
+    local Message = table.concat({...}, " ")
+    print(Message)
+    table.insert(BringDebug, Message)
+
+    if setclipboard then
+        setclipboard(table.concat(BringDebug, "\n"))
+    elseif toclipboard then
+        toclipboard(table.concat(BringDebug, "\n"))
+    end
+end
+
+local function Bring(Enemy)
+    BringLog("========== BRING WORKER START ==========")
+    BringLog("[1] Enemy:", tostring(Enemy), Enemy and Enemy.Name or "nil")
+
+    if not Enemy then
+        BringLog("[ERROR] Enemy is nil")
+        return
+    end
+
+    BringLog("[2] Parent:", tostring(Enemy.Parent))
+    BringLog("[3] BringTag:", tostring(Enemy:HasTag(BRING_TAG)))
+
+    local RootPart = Enemy:FindFirstChild("HumanoidRootPart")
+    local Humanoid = Enemy:FindFirstChild("Humanoid")
+
+    BringLog("[4] RootPart:", tostring(RootPart))
+    BringLog("[5] Humanoid:", tostring(Humanoid))
+
+    if not RootPart or not Humanoid then
+        BringLog("[ERROR] Missing RootPart/Humanoid")
+        return
+    end
+
+    BringLog("[6] Health:", tostring(Humanoid.Health))
+
+    local EnemyName = Enemy.Name
+    local CloneAttachment = Attachment:Clone()
+
+    BringLog("[7] Attachment Clone:", tostring(CloneAttachment))
+
+    local AlignPosition = CloneAttachment:FindFirstChild("AlignPosition")
+
+    BringLog("[8] AlignPosition:", tostring(AlignPosition))
+
+    if not AlignPosition then
+        BringLog("[ERROR] AlignPosition missing")
+        CloneAttachment:Destroy()
+        return
+    end
+
+    AlignPosition.Attachment0 = CloneAttachment
+    CloneAttachment.Parent = RootPart
+
+    BringLog("[9] Attachment Parent:", tostring(CloneAttachment.Parent))
+    BringLog("[10] Enabled:", tostring(AlignPosition.Enabled))
+    BringLog("[11] MaxForce:", tostring(AlignPosition.MaxForce))
+    BringLog("[12] Responsiveness:", tostring(AlignPosition.Responsiveness))
+
+    local TargetKey = Module.IsSuperBring and "ALL_MOBS" or EnemyName
+    local Target = Cached.Bring[TargetKey]
+
+    BringLog("[13] IsSuperBring:", tostring(Module.IsSuperBring))
+    BringLog("[14] TargetKey:", TargetKey)
+    BringLog("[15] Target:", tostring(Target))
+
+    if not Target then
+        BringLog("[ERROR] Target is nil")
+        CloneAttachment:Destroy()
+        return
+    end
+
+    BringLog("[16] Target Position:", tostring(Target.Position))
+    BringLog("[17] Enemy Position:", tostring(RootPart.Position))
+    BringLog("[18] Distance:", tostring((Target.Position - RootPart.Position).Magnitude))
+
+    AlignPosition.Position = Target.Position
+
+    BringLog("[19] Align Position SET:", tostring(AlignPosition.Position))
+
+    task.wait(0.1)
+
+    BringLog("[20] Enemy Position After:", tostring(RootPart.Position))
+    BringLog("[21] Distance After:", tostring((Target.Position - RootPart.Position).Magnitude))
+    BringLog("========== BRING WORKER TEST END ==========")
+
+    while Enemy and Enemy.Parent == Enemies and Enemy:HasTag(BRING_TAG) do
+        if Humanoid.Health <= 0 then
+            BringLog("[BREAK] Humanoid Dead")
+            break
+        end
+
+        if RootPart.Parent ~= Enemy then
+            BringLog("[BREAK] RootPart Parent Changed")
+            break
+        end
+
+        local CurrentTarget = Cached.Bring[TargetKey]
+
+        if not CurrentTarget then
+            BringLog("[BREAK] CurrentTarget nil")
+            break
+        end
+
+        if AlignPosition.Position ~= CurrentTarget.Position then
+            AlignPosition.Position = CurrentTarget.Position
+        end
+
+        task.wait()
+    end
+
+    BringLog("[WORKER END]", Enemy.Name)
+
+    if Enemy and Enemy:HasTag(BRING_TAG) then
+        Enemy:RemoveTag(BRING_TAG)
+    end
+
+    if CloneAttachment then
+        CloneAttachment:Destroy()
+    end
+end
+
+        local function Brin22g(Enemy)
             local RootPart = Enemy:WaitForChild("HumanoidRootPart")
             local Humanoid = Enemy:WaitForChild("Humanoid")
             local EnemyName = Enemy.Name
@@ -965,8 +1091,13 @@ return(function(Installer)
         Connect(CollectionService:GetInstanceAddedSignal("BasicMob"), NewEnemyAdded)
         Connect(CollectionService:GetInstanceAddedSignal(KILLAURA_TAG), KillAura)
         CollectionService:GetInstanceAddedSignal(BRING_TAG):Connect(function(Enemy)
-    print("[BRING SIGNAL]", Enemy.Name, Enemy:HasTag(BRING_TAG))
-    task.spawn(Bring, Enemy)
+    BringLog("******** BRING TAG EVENT ********")
+    BringLog("Enemy:", tostring(Enemy), Enemy and Enemy.Name or "nil")
+    BringLog("Tag:", tostring(Enemy and Enemy:HasTag(BRING_TAG)))
+
+    task.spawn(function()
+        Bring(Enemy)
+    end)
 end)
 
         return EnemiesModule
