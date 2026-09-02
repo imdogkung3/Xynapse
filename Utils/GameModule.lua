@@ -12,10 +12,9 @@ return(function(Installer)
     local Repository = "Xynapse"
 
     local Configuration = Installer.Configurations
-    local Settings = Installer.Settings
     local Connect = Installer.Connect
 
-    local function fetch(file)
+    local function fetch(owner, repo, file)
         local URL = string.format(
             "https://raw.githubusercontent.com/%s/%s/main/%s",
             Owner, Repository, file
@@ -97,8 +96,7 @@ return(function(Installer)
     local fireclickdetector = fireclickdetector or empty
     local restorefunction = restorefunction or empty
     local hookfunction = hookfunction or empty
-
-    local Executor = string.upper(if identifyexecutor then identifyexecutor() else "NULL")
+    local getsenv = getsenv or empty
 
     local BRING_TAG = _ENV._Bring_Tag or tostring(math.random(80, 2e4))
     local KILLAURA_TAG = _ENV._KillAura_Tag or tostring(math.random(120, 2e4))
@@ -148,20 +146,6 @@ return(function(Installer)
         return (Humanoid and Humanoid.Health > 0) or HumanoidRootPart ~= nil
     end
 
-    local function IsValidSea(sea)
-        return type(sea) == "number" and (sea == 1 or sea == 2 or sea == 3)
-    end
-
-    local function GetSea(fallback)
-        local sea = Module.Sea
-        
-        if IsValidSea(sea) then
-            return sea
-        end
-        
-        return fallback or 1
-    end
-
     do
         function Module:Unit(BasePart)
             return (BasePart.Position - HumanoidRootPart.Position).Unit
@@ -176,21 +160,30 @@ return(function(Installer)
         end
 
         function Module:IsPortal()
-            return GetSea() ~= 3 or self:HaveItem('Valkyrie Helm')
+            return Module.Sea ~= 3 or self:HaveItem('Valkyrie Helm')
         end
 
         function Module:HaveItem(name)
             if not IsAlive() then return end
+            if not Backpack then return end
+
+            if Character and Character:FindFirstChild(name) then
+                return true
+            end
+
+            if Backpack:FindFirstChild(name) then
+                return true
+            end
 
             local Inventory = Module:ComF("getInventoryWeapons")
 
             for _, v in pairs(Inventory) do
                 if v.Name == name then
-                    return v
+                    return true
                 end
             end
 
-            return Character:FindFirstChild(name) or Backpack:FindFirstChild(name)
+            return false
         end
 
         function Module:Equip(Name, Tooltip)
@@ -218,12 +211,7 @@ return(function(Installer)
         end
 
         function Module:TravelTo(Sea)
-            local seaName = self.SeaName and self.SeaName[Sea]
-            if seaName then
-                self:ComF("Travel" .. seaName)
-            else
-                warn("[Module:TravelTo] Invalid Sea index:", Sea)
-            end
+            self:ComF("Travel" .. self.SeaName[Sea])
         end
 
         function Module:BringEnemies(ToEnemy, SuperBring, CustomCFrame, Distance)
@@ -233,13 +221,13 @@ return(function(Installer)
 
             pcall(sethiddenproperty, LocalPlayer, "SimulationRadius", math.huge)
 
-            if Distance or Settings['Enabled Bring'] then
+            if Distance or Configuration['Enabled Bring'] then
                 Module.IsSuperBring = SuperBring and true or false
 
                 local Name = ToEnemy.Name
                 local BringPositionTag = SuperBring and "ALL_MOBS" or Name
                 local Target = CustomCFrame or ToEnemy.PrimaryPart.CFrame
-                local MaxDistance = Distance or Settings['Bring Distance']
+                local MaxDistance = Distance or Configuration['Bring Distance']
 
                 if not Cached.Bring[BringPositionTag] or (Target.Position - Cached.Bring[BringPositionTag].Position).Magnitude > 25 then
                     Cached.Bring[BringPositionTag] = Target
@@ -286,25 +274,17 @@ return(function(Installer)
         Module.IsMobile = Mobile
 
         Module.RaidList = (function()
-            if Executor == "XENO" then
-                return {
-                    "Phoenix", "Dough", "Flame", "Ice", "Quake", "Light",
-                    "Dark", "Spider", "Rumble", "Magma", "Buddha", "Sand",
-                }
-            end
-
             local Success, RaidModule = pcall(require, ReplicatedStorage:WaitForChild("Raids"))
 
             if not Success or type(RaidModule) ~= "table" then
                 return {
-                    "Phoenix", "Dough", "Flame", "Ice", "Quake", "Light",
-                    "Dark", "Spider", "Rumble", "Magma", "Buddha", "Sand",
+                    "Phoenix", "Dough", "Flame", "Ice", "Quake", "Light";
+                    "Dark", "Spider", "Rumble", "Magma", "Buddha", "Sand";
                 }
             end
 
             local AdvancedRaids = RaidModule.advancedRaids or {}
             local NormalRaids = RaidModule.raids or {}
-
             local RaidList = {}
 
             for i = 1, #AdvancedRaids do table.insert(RaidList, AdvancedRaids[i]) end
@@ -319,9 +299,6 @@ return(function(Installer)
                 if Current == 'Sea2' then return 2 end
                 if Current == 'Sea3' then return 3 end 
             end
-
-            warn("[Module.Sea] MAP attribute not recognized:", tostring(workspace:GetAttribute('MAP')))
-            return "N/A"
         end)()
 
         Module.GateList = {
@@ -338,10 +315,10 @@ return(function(Installer)
                 Vector3.new(-6505, 125, -130) -- Out Ghost Ship
             },
             [3] = {
-                Vector3.new(-5100, 450, -3250), -- Castle on the Sea
-                Vector3.new(5750, 1120, -338), -- Hydra
-                Vector3.new(-12540, 333, -7600) -- Mansion 
-            },
+                Vector3.new(-5076, 314, -3151), -- Castle on the Sea
+                Vector3.new(5657, 1013, -338), -- Hydra
+                Vector3.new(-12479, 375, -7566) -- Mansion 
+            }
         }
     end
 
@@ -354,7 +331,7 @@ return(function(Installer)
 
         function Aimbot:Check()
             for _,v in pairs(self._index) do
-                if Settings[v] == true then
+                if Configuration[v] == true then
                     return true 
                 end 
             end 
@@ -363,7 +340,7 @@ return(function(Installer)
         end
 
         function Aimbot:Import(Name)
-            if not self._index[Name] then
+            if not self.index[Name] then
                 table.insert(self._index, Name)
             end
         end
@@ -377,113 +354,145 @@ return(function(Installer)
 
     AddModule("Combat", function()
         local Combat = {
-            RANGE = 50,
-            HIT_FUNCTION = nil
+            RANGE = 67
         }
+
+        Combat.Slash = {} do
+            function Combat:Insert(Name, Data)
+                self.Slash[`{Name}-{Name}`] = function(Remote, Unit)
+                    Remote:FireServer(Unit, unpack(Data))
+                end
+            end
+
+            do
+                Combat:Insert("Control", { 1, true })
+            end
+        end
 
         local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
         local RegisterHit = Net:WaitForChild("RE/RegisterHit")
 
-        local Hash coroutine.wrap(function()
-            Hash = tostring(LocalPlayer.UserId):sub(2, 4) .. tostring(coroutine.running()):sub(11, 15)
-        end)()
+        local HIT_FUNCTION; task.defer(function()
+            local LocalScript = PlayerScripts:FindFirstChildOfClass("LocalScript")
 
-        task.defer(function()
-            pcall(function()
-                local LocalScript = PlayerScripts:FindFirstChildOfClass("LocalScript")
-
-                while not LocalScript do
-                    LocalPlayer.PlayerScripts.ChildAdded:Wait()
-                    LocalScript = PlayerScripts:FindFirstChildOfClass("LocalScript")
-                end
-
-                if getsenv then
-                    local Success, Environtment = pcall(getsenv, LocalScript)
-
-                    if Success and Environtment then
-                        if Environtment._G.SendHitsToServer then
-                            Combat.HIT_FUNCTION = Environtment._G.SendHitsToServer
-                        end
-                    end
-                end
-            end)
-        end)
-
-        local function ProcessEnemy(Closet)
-            local BladeHits = {}
-
-            for _, Enemy in ipairs(Enemies:GetChildren()) do
-                if Enemy ~= Closet and Module:IsAlive(Enemy) then
-                    local HumanoidRootPart = Enemy:FindFirstChild("HumanoidRootPart")
-
-                    if HumanoidRootPart then
-                        table.insert(BladeHits, { Enemy, HumanoidRootPart })
-                    end
-                end
+            while not LocalScript do
+                PlayerScripts.ChildAdded:Wait()
+                LocalScript = PlayerScripts:FindFirstChildOfClass("LocalScript")
             end
 
-            if Settings['Attack Players'] then
-                for _, Enemy in ipairs(Characters:GetChildren()) do
-                    if Enemy ~= Closet and Module:IsAlive(Enemy) then
-                        local HumanoidRootPart = Enemy:FindFirstChild("HumanoidRootPart")
+            if getsenv then
+                local Success, ScriptEnv = pcall(getsenv, LocalScript)
 
-                        if HumanoidRootPart then
-                            table.insert(BladeHits, { Enemy, HumanoidRootPart })
-                        end
-                    end
+                if Success and ScriptEnv then
+                    HIT_FUNCTION = ScriptEnv._G.SendHitsToServer
+                end
+            end
+        end)
+
+        function Combat:GetFolder()
+            return { Enemies, Configuration['Attack Players'] and Characters or nil }
+        end
+
+        function Combat:Process(Closest)
+            local BladeHits = {}
+
+            local Folders = self:GetFolder()
+
+            for _, List in ipairs(Folders) do
+
+                if not List then continue end
+
+                for _, Enemy in List:GetChildren() do
+
+                    if Enemy == Closest then continue end
+
+                    if not Module:IsAlive(Enemy) then continue end
+
+                    local HumanoidRootPart = Enemy:FindFirstChild("HumanoidRootPart")
+
+                    if not HumanoidRootPart then continue end
+
+                    table.insert(BladeHits, { Enemy, HumanoidRootPart })
                 end
             end
 
             return BladeHits
         end
 
-        local function Fired(target, enemyData)
+        function Combat:Fired(Target, Data)
             RegisterAttack:FireServer(0.5)
 
-            if Combat.HIT_FUNCTION then
-                return Combat.HIT_FUNCTION(target, enemyData, nil, Hash)
+            if HIT_FUNCTION then
+                return HIT_FUNCTION(Target, Data)
             end
 
-            RegisterHit:FireServer(target, enemyData, nil, Hash)
+            RegisterHit:FireServer(Target, Data)
         end
 
-        Combat.ATTACK = Fired
+        function Combat:Attack()
+            local Folders = self:GetFolder()
 
-        local function Attack()
-            local Folders = { Enemies, Settings['Attack Players'] and Characters or nil }
+            for _, List in ipairs(Folders) do
 
-            for _, folder in ipairs(Folders) do
-                if not folder then continue end
+                if not List then continue end
 
-                for _, target in pairs(folder:GetChildren()) do
-                    if target == Character then continue end
-                    if not Module:IsAlive(target) then continue end
-                    if Module:Distance(target:GetPivot()) >= Combat.RANGE then continue end
+                for _, Enemy in List:GetChildren() do
 
-                    local rootPart = target:FindFirstChild("HumanoidRootPart")
-                    if not rootPart then continue end
+                    if Enemy == Character then continue end
 
-                    Fired(rootPart, ProcessEnemy(target))
+                    if not Module:IsAlive(Enemy) then continue end
+
+                    if Module:Distance(Enemy:GetPivot()) >= Combat.RANGE then continue end
+
+                    local HumanoidRootPart = Enemy:FindFirstChild("HumanoidRootPart")
+
+                    if not HumanoidRootPart then continue end
+
+                    Combat:Fired(HumanoidRootPart, Combat:Process(Enemy))
                 end
             end
         end
 
-        local function GetWeapons(a, Tip)
-            if not IsAlive() then return end
+        function Combat:Slash(Tool)
+            local LeftClickRemote = Tool:FindFirstChild('LeftClickRemote')
 
-            for _, Tool in a:GetChildren() do
-                if Tool:IsA("Tool") and Tool.ToolTip == Tip then
-                    return Tool
+            if not LeftClickRemote then return end
+
+            local Folders = self:GetFolder()
+
+            for _, List in ipairs(Folders) do
+
+                if not List then continue end
+
+                for _, Enemy in List:GetChildren() do
+
+                    if Enemy == Character then continue end
+
+                    if not Module:IsAlive(Enemy) then continue end
+
+                    if Module:Distance(Enemy:GetPivot()) >= Combat.RANGE then continue end
+
+                    local BasePart = Enemy:FindFirstChild("HumanoidRootPart")
+
+                    if not BasePart then continue end
+
+                    local Unit = Module:Unit(BasePart)
+
+                    if Data[tostring(Tool)] then
+                        Data[tostring(Tool)](LeftClickRemote, Unit)
+                    else
+                        LeftClickRemote:FireServer(Unit, 1)
+                    end
                 end
             end
-
-            return nil
         end
 
         Connect(RenderStepped, function()
-            if not Settings['Fast Attack'] then return end
+            if not Configuration['Fast Attack'] then return end
 
             if not IsAlive() then return end
+
+            if not Backpack then return end
 
             local Equiped = Character and Character:FindFirstChildOfClass("Tool")
 
@@ -491,22 +500,11 @@ return(function(Installer)
 
             local Name = tostring(Equiped)
 
-            if Name == 'Ice-Ice' or Name == 'Light-Light' then
-                return pcall(Attack)
+            if Name == 'Ice-Ice' or Name == 'Light-Light' or Equiped.ToolTip ~= 'Blox Fruit' then
+                return Combat:Attack()
             end
 
-            if Equiped.ToolTip == 'Blox Fruit' then
-                local LeftClickRemote = Equiped:FindFirstChild("LeftClickRemote")
-                if not LeftClickRemote then return end
-
-                LeftClickRemote:FireServer(Vector3.new(0, -500, 0), 1, true)
-                LeftClickRemote:FireServer(false)
-            end
-
-            local Type = Equiped and (Equiped.ToolTip == 'Melee' or Equiped.ToolTip == 'Sword')
-            if not Type then return end
-
-            pcall(Attack)
+            return Combat:Slash(Equiped)
         end)
 
         return Combat
@@ -514,49 +512,14 @@ return(function(Installer)
 
     AddModule("Quest", function()
         local Quest = {
+            Quests = require(ReplicatedStorage:WaitForChild('Quests')),
+            GuideModule = require(ReplicatedStorage:WaitForChild('GuideModule')),
             Blacklist = { "BartiloQuest", "MarineQuest", "CitizenQuest" },
-            GuideModule = {}
         }
-
-        Quest.Quests = (function()
-            if Executor == "XENO" then
-                return fetch("Utils/Quests.luau")
-            end
-
-            local Success, Quests = pcall(require, ReplicatedStorage:WaitForChild('Quests'))
-
-            if not Success or type(Quests) ~= "table" then
-                return fetch("Utils/Quests.luau")
-            end
-
-            return Quests
-        end)()
-
-        Quest.GuideModule = (function()
-            local sea = GetSea()
-
-            if Executor == "XENO" then
-                return fetch("Utils/GuideModule.luau")[sea]
-            end
-
-            local Success, GuideModule = pcall(require, ReplicatedStorage:WaitForChild('GuideModule'))
-
-            if not Success or type(GuideModule) ~= "table" then
-                return fetch("Utils/GuideModule.luau")[sea]
-            end
-
-            return GuideModule['Data']['NPCList']
-        end)()
 
         function Quest:GetMonster(CurrentLevel)
             local Data, Levels = {}, {}
-            local sea = GetSea()
-            local Maximum = ({ {0, 700}, {700, 1500}, {1500, math.huge} })[sea]
-
-            if not Maximum then
-                warn("[Quest:GetMonster] Invalid sea:", tostring(Module.Sea))
-                return nil
-            end
+            local Maximum = ({ {0, 700}, {700, 1500}, {1500, math.huge} })[Module.Sea]
 
             for name, task in pairs(Quest.Quests) do
 
@@ -581,15 +544,13 @@ return(function(Installer)
                 end
             end
 
-            if #Levels == 0 then return nil end
-
             return Data[tostring(math.max(unpack(Levels)))]
         end
 
         function Quest:NPCsData(CurrentLevel)
             local Data, Levels = {}, {}
 
-            for _, Npcs in pairs(Quest.GuideModule) do
+            for _, Npcs in pairs(Quest.GuideModule['Data']['NPCList']) do
                 local Level = Npcs.Levels[1]
 
                 if CurrentLevel >= Level then
@@ -602,8 +563,6 @@ return(function(Installer)
                     }
                 end
             end
-
-            if #Levels == 0 then return nil end
 
             return Data[tostring(math.max(unpack(Levels)))]
         end
@@ -618,7 +577,7 @@ return(function(Installer)
                         ['Monster'] = "Trainee",
                         ['Level'] = 1,
                         ['Quest'] = "MarineQuest",
-                        ['Position'] = CFrame.new(-2711, 24, 2104),
+                        ['Position'] = CFrame.new(1059, 15, 1550),
                     }
                 elseif tostring(LocalPlayer.Team) == "Pirates" then
                     return {
@@ -626,7 +585,7 @@ return(function(Installer)
                         ['Monster'] = "Bandit",
                         ['Level'] = 1,
                         ['Quest'] = "BanditQuest1",
-                        ['Position'] = CFrame.new(1059, 15, 1550),
+                        ['Position'] = CFrame.new(-2711, 24, 2104),
                     }
                 end
 
@@ -634,18 +593,7 @@ return(function(Installer)
             end
 
             local Data = self:GetMonster(Level)
-
-            if not Data then
-                warn("[Quest:GetQuest] GetMonster returned nil for level:", Level)
-                return nil
-            end
-
             local NPCsData = self:NPCsData(Level)
-
-            if not NPCsData then
-                warn("[Quest:GetQuest] NPCsData returned nil for level:", Level)
-                return nil
-            end
 
             Data['Quest'] = NPCsData.Quest
             Data['Position'] = CFrame.new(NPCsData.Position)
@@ -664,7 +612,7 @@ return(function(Installer)
         local SeaCastle = CFrame.new(-5556, 314, -2988)
 
         local TagsMobs = {
-            __Elite = CreateDictionary({ "Deandre", "Diablo", "Urban", "Tyrant of the skies" }, true),
+            __Elite = CreateDictionary({ "Deandre", "Diablo", "Urban" }, true),
             __Bones = CreateDictionary({ "Reborn Skeleton", "Living Zombie", "Demonic Soul", "Posessed Mummy" }, true),
             __CakePrince = CreateDictionary({ "Head Baker", "Baking Staff", "Cake Guard", "Cookie Crafter" }, true),
             __TyrantSkies = CreateDictionary({ "Sun-kissed Warrior", "Skull Slayer", "Isle Champion", "Serpent Hunter" }, true)
@@ -687,8 +635,11 @@ return(function(Installer)
 
             if Humanoid and Humanoid.Health > 0 then
                 table.insert(list, NewEnemy)
+
                 Humanoid.Died:Wait()
+
                 local index = table.find(list, NewEnemy)
+
                 if index then table.remove(list, index) end
             end
         end
@@ -713,7 +664,7 @@ return(function(Installer)
             Others[EnemyName] = Others[EnemyName] or {}
             task.spawn(New, Others[EnemyName], Enemy)
 
-            if GetSea() == 3 then
+            if Module.Sea == 3 then
                 task.spawn(IsFromPiratesSea, Enemy)
             end
 
@@ -836,22 +787,24 @@ return(function(Installer)
                 local Enemy = EnemiesList[i]
 
                 if not Enemy:IsA('Model') then continue end
+
                 if not Enemy.PrimaryPart then continue end
+
                 if not ValidData(name, Enemy) then continue end
 
-                if Module:IsAlive(Enemy) then
-                    local Magnitude = LocalPlayer:DistanceFromCharacter(Enemy.PrimaryPart.Position)
+                if not Module:IsAlive(Enemy) then continue end
 
-                    if Enemy and Magnitude <= Distance then
-                        Distance, Nearest = Magnitude, Enemy
-                    end
+                local Magnitude = Module:Distance(Enemy.PrimaryPart.Position)
+
+                if Magnitude <= Distance then
+                    Distance, Nearest = Magnitude, Enemy
                 end
             end
 
             return Nearest
         end
 
-        function EnemiesModule:GetEnemies(range, name)
+        function EnemiesModule:GetEnemies(Range, Name)
             local Nearest, Distance = nil, math.huge
             local EnemiesList = Enemies:GetChildren()
 
@@ -859,14 +812,15 @@ return(function(Installer)
                 local Enemy = EnemiesList[i]
 
                 if not Enemy.PrimaryPart then continue end
-                if not ValidData(name, Enemy) then continue end
 
-                if Module:IsAlive(Enemy) then
-                    local Magnitude = LocalPlayer:DistanceFromCharacter(Enemy.PrimaryPart.Position)
+                if not ValidData(Name, Enemy) then continue end
 
-                    if Enemy and (not range or Magnitude < range) and Magnitude < Distance then
-                        Distance, Nearest = Magnitude, Enemy
-                    end
+                if not Module:IsAlive(Enemy) then continue end
+
+                local Magnitude = Module:Distance(Enemy.PrimaryPart.Position)
+
+                if (not Range or Magnitude < Range) and Magnitude < Distance then
+                    Distance, Nearest = Magnitude, Enemy
                 end
             end
 
@@ -888,7 +842,7 @@ return(function(Installer)
 
                 local Target = Cached.Bring[Module.IsSuperBring and "ALL_MOBS" or EnemyName]
 
-                if Target and (Target.Position - RootPart.Position).Magnitude <= Settings["Bring Distance"] then
+                if Target and (Target.Position - RootPart.Position).Magnitude <= Configuration["Bring Distance"] then
                     if AlignPosition.Position ~= Target.Position then
                         AlignPosition.Position = Target.Position
                     end
@@ -910,9 +864,12 @@ return(function(Installer)
             if Humanoid and RootPart then
                 RootPart.CanCollide = false
                 RootPart.Size = Vector3.new(60, 60, 60)
+
                 Humanoid:ChangeState(15)
                 Humanoid.Health = 0
+
                 task.wait()
+
                 Enemy:RemoveTag(KILLAURA_TAG)
             end
         end
@@ -923,59 +880,6 @@ return(function(Installer)
         Connect(CollectionService:GetInstanceAddedSignal(BRING_TAG), Bring)
 
         return EnemiesModule
-    end)
-
-    AddModule("Signal", function()
-        local Signal = {}
-        local Connection = {}
-
-        Connection.__index = Connection
-        Signal.__index = Signal
-
-        function Connection:Disconnect()
-            if not self.Connected then
-                return
-            end
-
-            local find = table.find(self.Signal._connections, self)
-            if find then
-                table.remove(self.Signal._connections, find)
-            end
-
-            self.Function = nil
-            self.Connected = false
-        end
-
-        function Connection:Fire(...)
-            if self.Function then
-                task.spawn(self.Function, ...)
-            end
-        end
-
-        function Signal.new()
-            return setmetatable({
-                _connections = {}
-            }, Signal)
-        end
-
-        function Signal:Connect(fn)
-            local connection = setmetatable({
-                Signal = self,
-                Function = fn,
-                Connected = true
-            }, Connection)
-
-            table.insert(self._connections, connection)
-            return connection
-        end
-
-        function Signal:Fire(...)
-            for _, connection in ipairs(self._connections) do
-                connection:Fire(...)
-            end
-        end
-
-        return Signal
     end)
 
     AddModule("BodyVelocity", function()
@@ -1082,48 +986,19 @@ return(function(Installer)
         local Cache = {
             ['Unlocked'] = setmetatable({}, { __index = function() return false end }),
             ['Mastery'] = setmetatable({}, { __index = function() return 0 end }),
+            ['Count'] = setmetatable({}, { __index = function() return 0 end }),
             ['MasteryRequirements'] = {},
             ['Items'] = {},
         }
 
-        do 
-            Cache._CountSignals = {}
-            Cache._CountData = {}
-
-            Cache.Count = setmetatable({}, {
-                __index = function(_, key)
-                    return Cache._CountData[key] or 0
-                end,
-                __newindex = function(_, key, value)
-                    local old = Cache._CountData[key] or 0
-
-                    if old ~= value then
-                        Cache._CountData[key] = value
-
-                        local signal = Cache._CountSignals[key]
-
-                        if signal then
-                            signal:Fire(value, old)
-                        end
-                    end
-                end
-            })
-
-            function Cache:GetInventoryChanged(key)
-                if not self._CountSignals[key] then
-                    self._CountSignals[key] = Module.Signal.new()
-                end
-
-                return self._CountSignals[key]
-            end
-
-            function Cache:Counts(str)
-                return self.Count[str]
-            end
+        function Cache:Counts(str)
+            return self.Count[str]
         end
 
         function Cache:HaveFruit()
             if not IsAlive() then return end
+
+            if not Backpack then return end
 
             for _, v in Backpack:GetChildren() do
                 if string.find(v.Name,"Fruit") then
@@ -1446,7 +1321,7 @@ return(function(Installer)
         }
 
         function Ocean:Zone()
-            local Coords = ZoneCoordinates[Settings['Select Zone']]
+            local Coords = ZoneCoordinates[Configuration['Select Zone']]
 
             if Coords then
                 return CFrame.new(Coords[1], 100, Coords[2])
@@ -1514,51 +1389,52 @@ return(function(Installer)
         end
 
         function Ocean:Drive(Ship, Target, High)
-            local Seat = Ship:FindFirstChild("VehicleSeat")
-            if not Seat then return end
+            local VehicleSeat = Ship:FindFirstChild("VehicleSeat")
 
-            local BodyPosition = Seat:FindFirstChild("BodyPosition")
-            local BodyVelocity = Seat:FindFirstChild("BodyVelocity")
-            if not BodyPosition or not BodyVelocity then return end
+            local Position = VehicleSeat.Position
+            local Distance = (Position.Position - Target.Position).Magnitude
 
-            local Origin   = Seat.Position
-            local Distance = (Target.Position - Ship:GetPivot().Position).Magnitude
+            local BodyPosition = VehicleSeat:FindFirstChild("BodyPosition")
+            local BodyVelocity = BodyPosition and BodyPosition:FindFirstChild("BodyVelocity")
 
-            BodyPosition.MaxForce = Vector3.zero
+            if not BodyVelocity then return end
+
             BodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-            BodyVelocity.P        = 0
+            BodyPosition.MaxForce = Vector3.zero
+            BodyVelocity.P = 0
 
-            Seat.CFrame = CFrame.new(Origin.X, High or 100, Origin.Z)
+            local Info = TweenInfo.new(Distance / 300, Enum.EasingStyle.Linear)
+            local Tween = TweenService:Create(VehicleSeat, Info, { CFrame = Position })
 
-            local Tween = TweenService:Create(
-                Seat,
-                TweenInfo.new(Distance / 250, Enum.EasingStyle.Linear),
-                { CFrame = Target }
-            )
+            _ENV.StopShip = function()
+                if Tween then Tween:Cancel() end
+            end
 
-            _ENV.StopShip = function() Tween:Cancel() end
+            VehicleSeat.CFrame = CFrame.new(Position.X, High or 100, Position.Z)
+
             Tween:Play()
         end
 
         function Ocean:Seabeast()
-            local closest = nil
-            local shortestDistance = 5000
+            local Nearest = nil
+            local Distance = 5000
 
-            for _, seabeast in pairs(SeaBeasts:GetChildren()) do
-                if not seabeast:IsA("Model") or not self:IsAlive(seabeast) then continue end
+            for _, v in SeaBeasts:GetChildren() do
+                if not self:IsAlive(SeaBeasts) then continue end
 
-                local hrp = seabeast:FindFirstChild("HumanoidRootPart")
-                if not hrp then continue end
+                local HumanoidRootPart = HumanoidRootPart:FindFirstChild("HumanoidRootPart")
 
-                local distance = Module:Distance(hrp.Position)
+                if not HumanoidRootPart then continue end
 
-                if distance < shortestDistance then
-                    shortestDistance = distance
-                    closest = seabeast
+                local Magnitude = Module:Distance(HumanoidRootPart.Position)
+
+                if Magnitude < Distance then
+                    Distance = Magnitude
+                    Nearest = v
                 end
             end
 
-            return closest
+            return Nearest
         end
 
         function Ocean:IsSeaBeastHiding(Animator)
@@ -1604,10 +1480,10 @@ return(function(Installer)
 
         local function GetEnabledSkills()
             return {
-                ['Melee'] = Settings['Melee'] or { "Z", "X", "C" },
-                ['Sword'] = Settings['Sword'] or { "Z", "X" },
-                ['Gun'] = Settings['Gun'] or { "Z", "X" },
-                ['Blox Fruit'] = Settings['Blox Fruit'] or { "Z", "X", "C" }
+                ['Melee'] = Configuration['Melee'] or { "Z", "X", "C" },
+                ['Sword'] = Configuration['Sword'] or { "Z", "X" },
+                ['Gun'] = Configuration['Gun'] or { "Z", "X" },
+                ['Blox Fruit'] = Configuration['Blox Fruit'] or { "Z", "X", "C" }
             }
         end
 
@@ -1843,330 +1719,9 @@ return(function(Installer)
         return SkillModule
     end)
 
-    AddModule("TweenCreator", function()
-        local TweenCreator = {}
-        TweenCreator.__index = TweenCreator
-
-        local tweens = {}
-        local EasingStyle = Enum.EasingStyle.Linear
-
-        function TweenCreator.new(obj, time, prop, value)
-            local self = setmetatable({}, TweenCreator)
-
-            self.tween = TweenService:Create(obj, TweenInfo.new(time, EasingStyle), { [prop] = value })
-            self.tween:Play()
-            self.value = value
-            self.object = obj
-
-            if tweens[obj] then
-                tweens[obj]:destroy()
-            end
-
-            tweens[obj] = self
-            return self
-        end
-
-        function TweenCreator:destroy()
-            self.tween:Pause()
-            self.tween:Destroy()
-
-            tweens[self.object] = nil
-            setmetatable(self, nil)
-        end
-
-        function TweenCreator:stopTween(obj)
-            if obj and tweens[obj] then
-                tweens[obj]:destroy()
-            end
-        end
-
-        return TweenCreator
-    end)
-
-    AddModule("Colors", function()
-        return function(text, color)
-            if type(text) == "string" and typeof(color) == "Color3" then
-                local r, g, b = math.floor(color.R * 255), math.floor(color.G * 255), math.floor(color.B * 255)
-
-                return string.format('<font color="rgb(%d, %d, %d)">%s</font>', r, g, b, text)
-            end
-
-            return text
-        end
-    end)
-
-    AddModule("Data", function()
-        local Data = {}
-
-        Data['Island'] = {
-            {
-                ['Pirate Starter'] = CFrame.new(1077, 16, 1439),
-                ['Marine Starter'] = CFrame.new(-2922, 41, 2111),
-                ['Jungle'] = CFrame.new(-1439, 62, 8),
-                ['Colosseum'] = CFrame.new(-1664, 151, -3245),
-                ['Frozen Village'] = CFrame.new(1221, 138, -1487),
-                ['Desert'] = CFrame.new(1058, 52, 4491),
-                ['Fountain City'] = CFrame.new(5269, 56, 4061),
-                ['Marine Fortress'] = CFrame.new(-5094, 263, 4414),
-                ['Middle Town'] = CFrame.new(-849, 74, 1625),
-                ['Pirate Village'] = CFrame.new(-1151, 65, 4160),
-                ['Underwater City'] = CFrame.new(61318, 19, 1525),
-                ['Whirlpool'] = CFrame.new(4344, 21, -1883),
-                ['Prison'] = CFrame.new(5316, 89, 699),
-                ['Lower Skyland'] = CFrame.new(-5050, 278, -2732),
-                ['Middle Skyland'] = CFrame.new(-4654, 873, -1762),
-                ['Upper Skyland'] = CFrame.new(-7654, 5623, -1071)
-            },
-            {
-                ['Kingdom of Rose'] = CFrame.new(-385, 319, 463),
-                ['Green Zone'] = CFrame.new(-2435, 73, -3250),
-                ['Hot and Cold'] = CFrame.new(-5507, 82, -5165),
-                ['Cursed Ship'] = CFrame.new(916, 126, 33073),
-                ['Snow Mountain'] = CFrame.new(1008, 446, -4906),
-                ['Ice Castle'] = CFrame.new(6146, 484, -6729),
-                ['Dark Arena'] = CFrame.new(3892, 14, -3616),
-                ['Graveyard Island'] = CFrame.new(-5722, 9, -963),
-                ['Forgotten Island'] = CFrame.new(-3026, 319, -10083),
-                ['North Pole'] = CFrame.new(-5397, 12, 1454),
-            },
-            {
-                ['Submerged Island'] = CFrame.new(9952, -1887, 9678),
-                ['Tiki Outpost'] = CFrame.new(-16928, 9, 437),
-                ['Castle on the Sea'] = CFrame.new(-5086, 315, -2974),
-                ['Hydra Island'] = CFrame.new(5164, 1174, 222),
-                ['Peanut Island'] = CFrame.new(-2111, 193, -10243),
-                ['Ice Cream Island'] = CFrame.new(-801, 210, -10999),
-                ['Cake Loaf'] = CFrame.new(-1748, 489, -12360),
-                ['Chocolate Island'] = CFrame.new(256, 124, -12549),
-                ['North Pole'] = CFrame.new(-906, 89, -14666),
-                ['Port Town'] = CFrame.new(-390, 11, 5244),
-                ['Great Tree'] = CFrame.new(3295, 776, -6281),
-                ['Haunted Castle'] = CFrame.new(-9499, 500, 6009),
-                ['Floating Turtle'] = CFrame.new(-12310, 1163, -9968)
-            },
-            {}
-        }
-
-        local IslandString = {} do
-            local seaIslands = Data['Island'][GetSea()]
-            if seaIslands then
-                for name, _ in pairs(seaIslands) do
-                    table.insert(IslandString, name)
-                end
-            else
-                warn("[Data] Island table not found for sea:", tostring(Module.Sea))
-            end
-        end
-
-        Module.IslandString = IslandString
-
-        Data['Place'] = {
-            {
-                ["Cyborg's Domain"] = CFrame.new(6271, 71, 4000),
-                ["Thunder God's Domain"] = CFrame.new(-7989, 5814, -2030),
-                ["Saber Expert's Domain"] = CFrame.new(-1425, 30, -14)
-            },
-            {
-                ['Cafe'] = CFrame.new(-377, 73, 290),
-                ['Basement Cafe'] = CFrame.new(-350, 16, 242),
-                ['Mansion'] = CFrame.new(-392, 374, 720),
-                ["Swan's Room"] = CFrame.new(2462, 15, 695),
-                ['Raid'] = CFrame.new(-6535, 310, -4745),
-                ['Labs'] = CFrame.new(-5548, 224, -5899),
-                ['Colosseum'] = CFrame.new(-1822, 46, 1411),
-            },
-            {
-                ["Beautiful Pirate's Domain"] = CFrame.new(5339, 22, -328),
-                ['Head Castle on the Sea'] = CFrame.new(-5421, 1090, -2666),
-                ['Mansion'] = CFrame.new(-12552, 337, -7504),
-                ['Dragon Dojo'] = CFrame.new(5701, 1207, 924),
-                ['Friendly Arena'] = CFrame.new(5012, 59, -1571),
-                ['Waterfall'] = CFrame.new(5174, 8, 1191),
-                ['Head of Great Tree'] = CFrame.new(3070, 2281, -7335)
-            },
-            {}
-        }
-
-        local PlaceString = {} do
-            local seaPlaces = Data['Place'][GetSea()]
-            if seaPlaces then
-                for name, _ in pairs(seaPlaces) do
-                    table.insert(PlaceString, name)
-                end
-            else
-                warn("[Data] Place table not found for sea:", tostring(Module.Sea))
-            end
-        end
-
-        Module.PlaceString = PlaceString
-
-        Data['Material'] = {
-            [1] = {
-                ["Magma Ore"]      = { "Military Soldier", "Military Spy" },
-                ["Leather"]        = { "Brute" },
-                ["Scrap Metal"]    = { "Brute" },
-                ["Angel Wings"]    = { "God's Guard" },
-                ["Fish Tail"]      = { "Fishman Warrior", "Fishman Commando" },
-                ["GunPowder"]      = { "Brute", "Pirate" }
-            },
-            [2] = {
-                ["Magma Ore"]              = { "Magma Ninja" },
-                ["Scrap Metal"]            = { "Swan Pirate" },
-                ["Radioactive Material"]   = { "Factory Staff" },
-                ["Vampire Fang"]           = { "Vampire" },
-                ["Mystic Droplet"]         = { "Water Fighter", "Sea Soldier" },
-                ["Ectoplasm"]              = { 'Ship Steward', 'Ship Officer', 'Ship Engineer', 'Ship Deckhand' }
-            },
-            [3] = {
-                ["Mini Tusk"]      = { "Mythological Pirate" },
-                ["Fish Tail"]      = { "Fishman Raider", "Fishman Captain" },
-                ["Scrap Metal"]    = { "Jungle Pirate" },
-                ["Dragon Scale"]   = { "Dragon Crew Archer", "Dragon Crew Warrior" },
-                ["Conjured Cocoa"] = { "Cocoa Warrior", "Chocolate Bar Battler", "Sweet Thief", "Candy Rebel" },
-                ["Demonic Wisp"]   = { "Demonic Soul" },
-                ["Gunpowder"]      = { "Pistol Billionaire" }
-            },
-            [4] = {}
-        }
-
-        Data['Material List'] = (function(v)
-            if v == 1 then
-                return { "Magma Ore", "Leather", "Scrap Metal", "Angel Wings", "Fish Tail", 'GunPowder' }
-            end
-
-            if v == 2 then
-                return { "Magma Ore", "Scrap Metal", "Radioactive Material", "Vampire Fang", "Mystic Droplet", "Ectoplasm" }
-            end
-
-            if v == 3 then
-                return { "Mini Tusk", "Fish Tail", "Scrap Metal", "Dragon Scale", "Conjured Cocoa", "Demonic Wisp", "Gunpowder" }
-            end
-
-            warn("[Data] Material List: unrecognized sea:", tostring(Module.Sea))
-            return {}
-        end)(GetSea())
-
-        Data['Shop'] = {
-            ["Fighting Style"] = {
-                ["Buy Black Leg"] = { "BuyBlackLeg" },
-                ["Buy Electro"] = { "BuyElectro" },
-                ["Buy Fishman Karate"] = { "BuyFishmanKarate" },
-                ["Buy Dragon Claw"] = { "BlackbeardReward", "DragonClaw", "2" },
-                ["Buy Superhuman"] = { "BuySuperhuman" },
-                ["Buy Death Step"] = { "BuyDeathStep" },
-                ["Buy Sharkman Karate"] = { "BuySharkmanKarate" },
-                ["Buy Electric Claw"] = { "BuyElectricClaw" },
-                ["Buy Dragon Talon"] = { "BuyDragonTalon" },
-                ["Buy GodHuman"] = { "BuyGodhuman" },
-                ["Buy Sanguine Art"] = { "BuySanguineArt" },
-                ["Buy Divine Art"] = { "BuyDivineArt" },
-            },
-
-            ["Ability"] = {
-                ["Buy Geppo"] = { "BuyHaki", "Geppo" },
-                ["Buy Buso"] = { "BuyHaki", "Buso" },
-                ["Buy Soru"] = { "BuyHaki", "Soru" },
-                ["Buy Ken"] = { "KenTalk", "Buy" },
-            },
-
-            ["Sword"] = {
-                ["Buy Katana"] = { "BuyItem", "Katana" },
-                ["Buy Cutlass"] = { "BuyItem", "Cutlass" },
-                ["Buy Dual Katana"] = { "BuyItem", "Dual Katana" },
-                ["Buy Iron Mace"] = { "BuyItem", "Iron Mace" },
-                ["Buy Triple Katana"] = { "BuyItem", "Triple Katana" },
-                ["Buy Pipe"] = { "BuyItem", "Pipe" },
-                ["Buy Dual-Headed Blade"] = { "BuyItem", "Dual-Headed Blade" },
-                ["Buy Soul Cane"] = { "BuyItem", "Soul Cane" },
-                ["Buy Bisento"] = { "BuyItem", "Bisento" },
-            },
-
-            ["Gun"] = {
-                ["Buy Musket"] = { "BuyItem", "Musket" },
-                ["Buy Slingshot"] = { "BuyItem", "Slingshot" },
-                ["Buy Flintlock"] = { "BuyItem", "Flintlock" },
-                ["Buy Refined Slingshot"] = { "BuyItem", "Refined Slingshot" },
-                ["Buy Dual Flintlock"] = { "BuyItem", "Dual Flintlock" },
-                ["Buy Cannon"] = { "BuyItem", "Cannon" },
-                ["Buy Kabucha"] = { "BlackbeardReward", "Slingshot", "2" },
-            },
-
-            ["Accessories"] = {
-                ["Buy Black Cape"] = { "BuyItem", "Black Cape" },
-                ["Buy Swordsman Hat"] = { "BuyItem", "Swordsman Hat" },
-                ["Buy Tomoe Ring"] = { "BuyItem", "Tomoe Ring" },
-            },
-
-            ["Race"] = {
-                ["Ghoul Race"] = { "Ectoplasm", "Change", 4 },
-                ["Cyborg Race"] = { "CyborgTrainer", "Buy" },
-            },
-        }
-
-        function Data:GetMaterail(a)
-            return self['Material'][GetSea()][a]
-        end
-
-        return Data
-    end)
-
-    AddModule("Bosses", function()
-        local sea = GetSea()
-
-        if sea == 1 then
-            return {
-                "The Gorilla King",
-                "Chef",
-                "Yeti",
-                "Mob Leader",
-                "Vice Admiral",
-                "Warden",
-                "Chief Warden",
-                "Swan",
-                "Magma Admiral",
-                "Fishman Lord",
-                "Wysper",
-                "Thunder God",
-                "Cyborg",
-                "Saber Expert"
-            }
-        elseif sea == 2 then
-            return {
-                "Diamond",
-                "Jeremy",
-                "Orbitus",
-                "Don Swan",
-                "Smoke Admiral",
-                "Cursed Captain",
-                "Darkbeard",
-                "Order",
-                "Awakened Ice Admiral",
-                "Tide Keeper"
-            }
-        elseif sea == 3 then
-            return {
-                "Stone",
-                "Hydra Leader",
-                "Kilo Admiral",
-                "Captain Elephant",
-                "Beautiful Pirate",
-                "rip_indra True Form",
-                "Longma",
-                "Soul Reaper",
-                "Cake Queen"
-            }
-        end
-
-        warn("[Bosses] Unknown sea:", tostring(Module.Sea))
-        
-        return {}
-    end)
-    
     task.spawn(function()
         local SpawnLocations = Module.SpawnLocations
         local EnemyLocations = Module.EnemyLocations
-
-        local EnemiesModule = Module.EnemiesModule
 
         local function NewIslandAdded(Island)
             if Island.Name:find("Island") then
@@ -2204,7 +1759,7 @@ return(function(Installer)
                 Teleport(spawnCFrame)
 
                 local waitStart = tick()
-                local waitDelay = Settings['Wait Enemies Delay'] or 0.75
+                local waitDelay = Configuration['Wait Enemies Delay'] or 0.75
 
                 while tick() - waitStart < waitDelay do
                     if ShouldStop(Breake) then return end
@@ -2252,60 +1807,66 @@ return(function(Installer)
     end)
 
     task.defer(function()
-        if Executor ~= "XENO" then
+        local function Log(code, message, context)
+            return warn(string.format("[ Forbidden ] [ %03d ] [ %s ] \n%s",code,context,message))
+        end
 
-            local function Log(code, message, context)
-                return warn(string.format("[ Forbidden ] [ %03d ] [ %s ] \n%s",code,context,message))
-            end
+        if not _ENV._0riginal then
+            local _Old
 
-            if not _ENV.xyn_original then
-                local _Old
+            _Old = hookmetamethod(game, "__namecall", function(self, ...)
+                local method = getnamecallmethod()
 
-                local safehook = hookmetamethod and clonefunction(hookmetamethod)
-                local safegetnamecall = getnamecallmethod and clonefunction(getnamecallmethod)
+                if tostring(self) == "PlayerGui" then
+                    if method == "Destroy" or method == "Remove" or method == "ClearAllChildren" then
+                        return Log(
+                            403,
+                            "Access denied - PlayerGui:Destroy()",
+                            "PlayerGui was locked by Antigravity."
+                        )
+                    end
+                end
 
-                _Old = safehook(game, "__namecall", function(self, ...)
-                    local method = safegetnamecall()
+                if method == "FireServer" or method == "InvokeServer" then
+                    local arg1, arg2 = ...
 
-                    if tostring(self) == "PlayerGui" then
-                        if method == "Destroy" or method == "Remove" or method == "ClearAllChildren" then
-                            return Log(
-                                403,
-                                "Access denied - PlayerGui:Destroy()",
-                                "PlayerGui was locked by Xynapse."
-                            )
+                    if method == "InvokeServer" and arg1 == 'X' and typeof(arg2) == 'Vector3' and self.Name == "" then
+                        if Module.Aimbot:Check() then
+                            return _Old(self, arg1, _ENV.Target)
                         end
+
+                        return _Old(self, ...)
                     end
 
-                    if method == "FireServer" or method == "InvokeServer" then
-                        local arg1, arg2 = ...
-
-                        if method == "InvokeServer" and arg1 == 'X' and typeof(arg2) == 'Vector3' and self.Name == "" then
-                            if Module.Aimbot:Check() then
-                                return _Old(self, arg1, _ENV.Target)
-                            end
-
-                            return _Old(self, ...)
+                    if method == "FireServer" and self.Name == "RemoteEvent" and typeof(arg1) == "Vector3" and arg2 == nil then
+                        if Module.Aimbot:Check() then
+                            return _Old(self, _ENV.Target)
                         end
 
-                        if method == "FireServer" and self.Name == "RemoteEvent" and typeof(arg1) == "Vector3" and arg2 == nil then
-                            if Module.Aimbot:Check() then
-                                return _Old(self, _ENV.Target)
-                            end
-
-                            return _Old(self, ...)
-                        end
+                        return _Old(self, ...)
                     end
+                end
 
-                    return _Old(self, ...)
+                return _Old(self, ...)
+            end)
+
+            _ENV._0riginal = _Old
+
+            do
+                local Effect = ReplicatedStorage:WaitForChild('Effect')
+                local Container = Effect:WaitForChild('Container')
+
+                local Death = require(Container:WaitForChild('Death'))
+                local Respawn = require(Container:WaitForChild('Respawn'))
+
+                pcall(hookfunction, Death, function( ... )
+                    return ( ... )
                 end)
 
-                _ENV.xyn_original = _Old
+                pcall(hookfunction, Respawn, function( ... )
+                    return ( ... )
+                end)
             end
-
-            --local EffectsLocalThread: LocalScript = PlayerScripts.EffectsLocalThread do
-            --    EffectsLocalThread.Disabled = true 
-            --end 
         end
     end)
 
