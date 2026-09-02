@@ -8,7 +8,7 @@ return(function(Installer)
         Enemies = {}
     }
 
-    local Owner = "vita6it"
+    local Owner = "imdogkung3"
     local Repository = "Xynapse"
 
     local Configuration = Installer.Configurations
@@ -227,7 +227,64 @@ return(function(Installer)
             end
         end
 
-        function Module:BringEnemies(ToEnemy, SuperBring, CustomCFrame, Distance)
+function Module:BringEnemies(ToEnemy, SuperBring, CustomCFrame, Distance)
+    if not Module:IsAlive(ToEnemy) or not ToEnemy.PrimaryPart then
+        return
+    end
+
+    pcall(sethiddenproperty, LocalPlayer, "SimulationRadius", math.huge)
+
+    if Distance or Settings["Enabled Bring"] then
+        local Name = ToEnemy.Name
+        local BringPositionTag = SuperBring and "ALL_MOBS" or Name
+        local Target = CustomCFrame or ToEnemy.PrimaryPart.CFrame
+        local MaxDistance = Distance or Settings["Bring Distance"]
+
+        Module.IsSuperBring = SuperBring == true
+
+        if not Cached.Bring[BringPositionTag] or (Target.Position - Cached.Bring[BringPositionTag].Position).Magnitude > 25 then
+            Cached.Bring[BringPositionTag] = Target
+        end
+
+        local EnemyList = SuperBring and Enemies:GetChildren() or self.EnemiesModule:GetTagged(Name)
+
+        if not EnemyList then
+            return
+        end
+
+        for i = 1, #EnemyList do
+            local Enemy = EnemyList[i]
+
+            if Enemy
+                and Enemy.Parent == Enemies
+                and (SuperBring or Enemy.Name == Name)
+                and Enemy:FindFirstChild("CharacterReady")
+                and Module:IsAlive(Enemy)
+                and Enemy.PrimaryPart
+                and LocalPlayer:DistanceFromCharacter(Enemy.PrimaryPart.Position) <= MaxDistance then
+
+                local Humanoid = Enemy:FindFirstChildOfClass("Humanoid")
+
+                if Humanoid then
+                    Humanoid.WalkSpeed = 0
+                    Humanoid.JumpPower = 0
+                end
+
+                if not Enemy:HasTag(BRING_TAG) then
+                    Enemy:AddTag(BRING_TAG)
+                end
+            end
+        end
+    else
+        if not Cached.Bring[ToEnemy] then
+            Cached.Bring[ToEnemy] = ToEnemy.PrimaryPart.CFrame
+        end
+
+        ToEnemy.PrimaryPart.CFrame = Cached.Bring[ToEnemy]
+    end
+end
+
+        function Module:BringEnemies22(ToEnemy, SuperBring, CustomCFrame, Distance)
             if not Module:IsAlive(ToEnemy) or not ToEnemy.PrimaryPart then
                 return nil
             end
@@ -718,7 +775,7 @@ return(function(Installer)
         local Attachment = Instance.new("Attachment") do
             local AlignPosition = Instance.new("AlignPosition")
             AlignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
-            AlignPosition.RigidityEnabled = true
+            AlignPosition.Position = Vector3.new(0, 20, 0)
             AlignPosition.Responsiveness = 200
             AlignPosition.MaxForce = math.huge
             AlignPosition.Parent = Attachment
@@ -919,14 +976,18 @@ return(function(Installer)
         end
 
 local function Bring(Enemy)
+    if not Enemy or Enemy.Parent ~= Enemies then
+        return
+    end
+
     local RootPart = Enemy:FindFirstChild("HumanoidRootPart")
-    local Humanoid = Enemy:FindFirstChild("Humanoid")
-    local EnemyName = Enemy.Name
+    local Humanoid = Enemy:FindFirstChildOfClass("Humanoid")
 
     if not RootPart or not Humanoid then
         return
     end
 
+    local EnemyName = Enemy.Name
     local CloneAttachment = Attachment:Clone()
     local AlignPosition = CloneAttachment:FindFirstChild("AlignPosition")
 
@@ -935,35 +996,42 @@ local function Bring(Enemy)
         return
     end
 
+    AlignPosition.Enabled = true
+    AlignPosition.RigidityEnabled = true
+    AlignPosition.MaxForce = math.huge
+    AlignPosition.MaxVelocity = math.huge
+    AlignPosition.Responsiveness = 200
+    AlignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
     AlignPosition.Attachment0 = CloneAttachment
-    RootPart.CanCollide = false
-    RootPart.AssemblyLinearVelocity = Vector3.zero
-    RootPart.AssemblyAngularVelocity = Vector3.zero
+
     CloneAttachment.Parent = RootPart
 
-    while Enemy and Enemy.Parent == Enemies and Enemy:HasTag(BRING_TAG) do
+    while Enemy.Parent == Enemies and Enemy:HasTag(BRING_TAG) do
         if Humanoid.Health <= 0 then
             break
         end
 
-        if RootPart.Parent ~= Enemy then
+        if not RootPart.Parent then
             break
         end
 
         local Target = Cached.Bring[Module.IsSuperBring and "ALL_MOBS" or EnemyName]
 
         if not Target then
-            break
+            task.wait()
+            continue
         end
 
-        if AlignPosition.Position ~= Target.Position then
-            AlignPosition.Position = Target.Position
+        local TargetPosition = Target.Position
+
+        if (AlignPosition.Position - TargetPosition).Magnitude > 0.1 then
+            AlignPosition.Position = TargetPosition
         end
 
         task.wait()
     end
 
-    if Enemy and Enemy:HasTag(BRING_TAG) then
+    if Enemy and Enemy.Parent == Enemies and Enemy:HasTag(BRING_TAG) then
         Enemy:RemoveTag(BRING_TAG)
     end
 
@@ -972,7 +1040,7 @@ local function Bring(Enemy)
     end
 end
 
-        local function Bring55(Enemy)
+        local function Bring222(Enemy)
             local RootPart = Enemy:WaitForChild("HumanoidRootPart")
             local Humanoid = Enemy:WaitForChild("Humanoid")
             local EnemyName = Enemy.Name
@@ -1016,10 +1084,16 @@ end
             end
         end
 
-        for _, Enemy in CollectionService:GetTagged("BasicMob") do NewEnemyAdded(Enemy) end
-        Connect(CollectionService:GetInstanceAddedSignal("BasicMob"), NewEnemyAdded)
-        Connect(CollectionService:GetInstanceAddedSignal(KILLAURA_TAG), KillAura)
-        Connect(CollectionService:GetInstanceAddedSignal(BRING_TAG), Bring)
+ for _, Enemy in CollectionService:GetTagged("BasicMob") do
+    NewEnemyAdded(Enemy)
+end
+
+Connect(CollectionService:GetInstanceAddedSignal("BasicMob"), NewEnemyAdded)
+Connect(CollectionService:GetInstanceAddedSignal(KILLAURA_TAG), KillAura)
+
+Connect(CollectionService:GetInstanceAddedSignal(BRING_TAG), function(Enemy)
+    task.spawn(Bring, Enemy)
+end)
 
         return EnemiesModule
     end)
