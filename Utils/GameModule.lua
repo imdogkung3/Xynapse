@@ -242,9 +242,8 @@ return(function(Installer)
                 local Target = CustomCFrame or ToEnemy.PrimaryPart.CFrame
                 local MaxDistance = Distance or Settings['Bring Distance']
 
-                if not Cached.Bring[BringPositionTag] or (Target.Position - Cached.Bring[BringPositionTag].Position).Magnitude > 25 then
+               
                     Cached.Bring[BringPositionTag] = Target
-                end
 
                 local EnemyList = (not SuperBring and self.EnemiesModule:GetTagged(Name)) or Enemies:GetChildren()
 
@@ -253,6 +252,7 @@ return(function(Installer)
 
                     if (SuperBring or Enemy.Name == Name)
                         and Enemy.Parent == Enemies
+                        and not Enemy:HasTag(BRING_TAG)
                         and Enemy:FindFirstChild("CharacterReady") then
 
                         local PrimaryPart = Enemy.PrimaryPart
@@ -261,9 +261,7 @@ return(function(Installer)
                             if LocalPlayer:DistanceFromCharacter(PrimaryPart.Position) < MaxDistance then
                                 Enemy.Humanoid.WalkSpeed = 0
                                 Enemy.Humanoid.JumpPower = 0
-                                        if not Enemy:HasTag(BRING_TAG) then
-            Enemy:AddTag(BRING_TAG)
-        end
+                                Enemy:AddTag(BRING_TAG)
                             end
                         end
                     end
@@ -966,7 +964,10 @@ return(function(Installer)
         for _, Enemy in CollectionService:GetTagged("BasicMob") do NewEnemyAdded(Enemy) end
         Connect(CollectionService:GetInstanceAddedSignal("BasicMob"), NewEnemyAdded)
         Connect(CollectionService:GetInstanceAddedSignal(KILLAURA_TAG), KillAura)
-        Connect(CollectionService:GetInstanceAddedSignal(BRING_TAG), Bring)
+        CollectionService:GetInstanceAddedSignal(BRING_TAG):Connect(function(Enemy)
+    print("[BRING SIGNAL]", Enemy.Name, Enemy:HasTag(BRING_TAG))
+    task.spawn(Bring, Enemy)
+end)
 
         return EnemiesModule
     end)
