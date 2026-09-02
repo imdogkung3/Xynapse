@@ -8,7 +8,7 @@ return(function(Installer)
         Enemies = {}
     }
 
-    local Owner = "imdogkung3"
+    local Owner = "vita6it"
     local Repository = "Xynapse"
 
     local Configuration = Installer.Configurations
@@ -39,7 +39,6 @@ return(function(Installer)
     local RunService = game:GetService("RunService")
     local Lighting = game:GetService('Lighting')
     local Players = game:GetService("Players")
-    local CoreGui = game:GetService('CoreGui')
 
     local Remotes: Folder = ReplicatedStorage:WaitForChild("Remotes")
     local Modules: Folder = ReplicatedStorage:WaitForChild("Modules")
@@ -155,11 +154,11 @@ return(function(Installer)
 
     local function GetSea(fallback)
         local sea = Module.Sea
-
+        
         if IsValidSea(sea) then
             return sea
         end
-
+        
         return fallback or 1
     end
 
@@ -227,64 +226,7 @@ return(function(Installer)
             end
         end
 
-function Module:BringEnemies(ToEnemy, SuperBring, CustomCFrame, Distance)
-    if not Module:IsAlive(ToEnemy) or not ToEnemy.PrimaryPart then
-        return
-    end
-
-    pcall(sethiddenproperty, LocalPlayer, "SimulationRadius", math.huge)
-
-    if Distance or Settings["Enabled Bring"] then
-        local Name = ToEnemy.Name
-        local BringPositionTag = SuperBring and "ALL_MOBS" or Name
-        local Target = CustomCFrame or ToEnemy.PrimaryPart.CFrame
-        local MaxDistance = Distance or Settings["Bring Distance"]
-
-        Module.IsSuperBring = SuperBring == true
-
-        if not Cached.Bring[BringPositionTag] or (Target.Position - Cached.Bring[BringPositionTag].Position).Magnitude > 25 then
-            Cached.Bring[BringPositionTag] = Target
-        end
-
-        local EnemyList = SuperBring and Enemies:GetChildren() or self.EnemiesModule:GetTagged(Name)
-
-        if not EnemyList then
-            return
-        end
-
-        for i = 1, #EnemyList do
-            local Enemy = EnemyList[i]
-
-            if Enemy
-                and Enemy.Parent == Enemies
-                and (SuperBring or Enemy.Name == Name)
-                and Enemy:FindFirstChild("CharacterReady")
-                and Module:IsAlive(Enemy)
-                and Enemy.PrimaryPart
-                and LocalPlayer:DistanceFromCharacter(Enemy.PrimaryPart.Position) <= MaxDistance then
-
-                local Humanoid = Enemy:FindFirstChildOfClass("Humanoid")
-
-                if Humanoid then
-                    Humanoid.WalkSpeed = 0
-                    Humanoid.JumpPower = 0
-                end
-
-                if not Enemy:HasTag(BRING_TAG) then
-                    Enemy:AddTag(BRING_TAG)
-                end
-            end
-        end
-    else
-        if not Cached.Bring[ToEnemy] then
-            Cached.Bring[ToEnemy] = ToEnemy.PrimaryPart.CFrame
-        end
-
-        ToEnemy.PrimaryPart.CFrame = Cached.Bring[ToEnemy]
-    end
-end
-
-        function Module:BringEnemies22(ToEnemy, SuperBring, CustomCFrame, Distance)
+        function Module:BringEnemies(ToEnemy, SuperBring, CustomCFrame, Distance)
             if not Module:IsAlive(ToEnemy) or not ToEnemy.PrimaryPart then
                 return nil
             end
@@ -384,7 +326,7 @@ end
 
         Module.GateList = {
             [1] = {
-                Vector3.new(3860, 26, -1780), -- Gate
+                Vector3.new(3864, 5, -1926), -- Gate
                 Vector3.new(61163, 5, 1819), -- Under Water
                 Vector3.new(-7894, 5545, -380), -- Sky 2
                 Vector3.new(-4607, 872, -1667) -- Sky 1
@@ -401,48 +343,6 @@ end
                 Vector3.new(-12540, 333, -7600) -- Mansion 
             },
         }
-
-        Module.FruitsId = {
-            ["rbxassetid://15124425041"] = "Rocket",
-            ["rbxassetid://15123685330"] = "Spin",
-            ["rbxassetid://15123613404"] = "Blade",
-            ["rbxassetid://15123689268"] = "Spring",
-            ["rbxassetid://15123595806"] = "Bomb",
-            ["rbxassetid://15123677932"] = "Smoke",
-            ["rbxassetid://15124220207"] = "Spike",
-            ["rbxassetid://121545956771325"] = "Flame",
-            ["rbxassetid://15123673019"] = "Sand",
-            ["rbxassetid://15123618591"] = "Dark",
-            ["rbxassetid://77885466312115"] = "Eagle",
-            ["rbxassetid://15112600534"] = "Diamond",
-            ["rbxassetid://15123640714"] = "Light",
-            ["rbxassetid://15123668008"] = "Rubber",
-            ["rbxassetid://15123662036"] = "Ghost",
-            ["rbxassetid://15123645682"] = "Magma",
-            ["rbxassetid://15123606541"] = "Quake",
-            ["rbxassetid://15123643097"] = "Love",
-            ["rbxassetid://15123681598"] = "Spider",
-            ["rbxassetid://116828771482820"] = "Creation",
-            ["rbxassetid://15123679712"] = "Sound",
-            ["rbxassetid://15123654553"] = "Phoenix",
-            ["rbxassetid://15123656798"] = "Portal",
-            ["rbxassetid://15123670514"] = "Rumble",
-            ["rbxassetid://15123652069"] = "Pain",
-            ["rbxassetid://15123587371"] = "Blizzard",
-            ["rbxassetid://15123633312"] = "Gravity",
-            ["rbxassetid://15123648309"] = "Mammoth",
-            ["rbxassetid://15694681122"] = "T-Rex",
-            ["rbxassetid://15123624401"] = "Dough",
-            ["rbxassetid://15123675904"] = "Shadow",
-            ["rbxassetid://10773719142"] = "Venom",
-            ["rbxassetid://15123616275"] = "Control",
-            ["rbxassetid://11911905519"] = "Spirit",
-            ["rbxassetid://15123638064"] = "Leopard",
-            ["rbxassetid://15487764876"] = "Kitsune",
-            ["rbxassetid://115276580506154"] = "Yeti",
-            ["rbxassetid://118054805452821"] = "Gas",
-            ["rbxassetid://95749033139458"] = "Dragon East"
-        }
     end
 
     AddModule("Aimbot", function()
@@ -454,7 +354,7 @@ end
 
         function Aimbot:Check()
             for _,v in pairs(self._index) do
-                if _ENV.GLOBALS_SETTINGS[v] == true then
+                if Settings[v] == true then
                     return true 
                 end 
             end 
@@ -483,8 +383,6 @@ end
 
         local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
         local RegisterHit = Net:WaitForChild("RE/RegisterHit")
-        
-        local GunModule = Executor ~= "XENO" and fetch('Utils/GunModule.lua') or nil
 
         local Hash coroutine.wrap(function()
             Hash = tostring(LocalPlayer.UserId):sub(2, 4) .. tostring(coroutine.running()):sub(11, 15)
@@ -570,7 +468,19 @@ end
             end
         end
 
-        Connect(Stepped, function()
+        local function GetWeapons(a, Tip)
+            if not IsAlive() then return end
+
+            for _, Tool in a:GetChildren() do
+                if Tool:IsA("Tool") and Tool.ToolTip == Tip then
+                    return Tool
+                end
+            end
+
+            return nil
+        end
+
+        Connect(RenderStepped, function()
             if not Settings['Fast Attack'] then return end
 
             if not IsAlive() then return end
@@ -580,10 +490,6 @@ end
             if not Equiped then return end
 
             local Name = tostring(Equiped)
-            
-            if Equiped.ToolTip == 'Gun' and typeof(GunModule) == 'table' then
-                return GunModule:FireTarget(Equiped, Character)
-            end
 
             if Name == 'Ice-Ice' or Name == 'Light-Light' then
                 return pcall(Attack)
@@ -608,19 +514,19 @@ end
 
     AddModule("Quest", function()
         local Quest = {
-            Blacklist = { "BartiloQuest", "MarineQuest", "CitizenQuest", "ImpelQuest" },
+            Blacklist = { "BartiloQuest", "MarineQuest", "CitizenQuest" },
             GuideModule = {}
         }
 
         Quest.Quests = (function()
             if Executor == "XENO" then
-                return fetch("Utils/Quests.lua")
+                return fetch("Utils/Quests.luau")
             end
 
             local Success, Quests = pcall(require, ReplicatedStorage:WaitForChild('Quests'))
 
             if not Success or type(Quests) ~= "table" then
-                return fetch("Utils/Quests.lua")
+                return fetch("Utils/Quests.luau")
             end
 
             return Quests
@@ -630,13 +536,13 @@ end
             local sea = GetSea()
 
             if Executor == "XENO" then
-                return fetch("Utils/GuideModule.lua")[sea]
+                return fetch("Utils/GuideModule.luau")[sea]
             end
 
             local Success, GuideModule = pcall(require, ReplicatedStorage:WaitForChild('GuideModule'))
 
             if not Success or type(GuideModule) ~= "table" then
-                return fetch("Utils/GuideModule.lua")[sea]
+                return fetch("Utils/GuideModule.luau")[sea]
             end
 
             return GuideModule['Data']['NPCList']
@@ -684,14 +590,6 @@ end
             local Data, Levels = {}, {}
 
             for _, Npcs in pairs(Quest.GuideModule) do
-                if not Npcs.InternalQuestName then
-                    continue
-                end
-
-                if table.find(Quest.Blacklist, Npcs.InternalQuestName) then
-                    continue
-                end
-
                 local Level = Npcs.Levels[1]
 
                 if CurrentLevel >= Level then
@@ -975,72 +873,7 @@ end
             return Nearest
         end
 
-local function Bring(Enemy)
-    if not Enemy or Enemy.Parent ~= Enemies then
-        return
-    end
-
-    local RootPart = Enemy:FindFirstChild("HumanoidRootPart")
-    local Humanoid = Enemy:FindFirstChildOfClass("Humanoid")
-
-    if not RootPart or not Humanoid then
-        return
-    end
-
-    local EnemyName = Enemy.Name
-    local CloneAttachment = Attachment:Clone()
-    local AlignPosition = CloneAttachment:FindFirstChild("AlignPosition")
-
-    if not AlignPosition then
-        CloneAttachment:Destroy()
-        return
-    end
-
-    AlignPosition.Enabled = true
-    AlignPosition.RigidityEnabled = true
-    AlignPosition.MaxForce = math.huge
-    AlignPosition.MaxVelocity = math.huge
-    AlignPosition.Responsiveness = 200
-    AlignPosition.Mode = Enum.PositionAlignmentMode.OneAttachment
-    AlignPosition.Attachment0 = CloneAttachment
-
-    CloneAttachment.Parent = RootPart
-
-    while Enemy.Parent == Enemies and Enemy:HasTag(BRING_TAG) do
-        if Humanoid.Health <= 0 then
-            break
-        end
-
-        if not RootPart.Parent then
-            break
-        end
-
-        local Target = Cached.Bring[Module.IsSuperBring and "ALL_MOBS" or EnemyName]
-
-        if not Target then
-            task.wait()
-            continue
-        end
-
-        local TargetPosition = Target.Position
-
-        if (AlignPosition.Position - TargetPosition).Magnitude > 0.1 then
-            AlignPosition.Position = TargetPosition
-        end
-
-        task.wait()
-    end
-
-    if Enemy and Enemy.Parent == Enemies and Enemy:HasTag(BRING_TAG) then
-        Enemy:RemoveTag(BRING_TAG)
-    end
-
-    if CloneAttachment then
-        CloneAttachment:Destroy()
-    end
-end
-
-        local function Bring222(Enemy)
+        local function Bring(Enemy)
             local RootPart = Enemy:WaitForChild("HumanoidRootPart")
             local Humanoid = Enemy:WaitForChild("Humanoid")
             local EnemyName = Enemy.Name
@@ -1084,16 +917,10 @@ end
             end
         end
 
- for _, Enemy in CollectionService:GetTagged("BasicMob") do
-    NewEnemyAdded(Enemy)
-end
-
-Connect(CollectionService:GetInstanceAddedSignal("BasicMob"), NewEnemyAdded)
-Connect(CollectionService:GetInstanceAddedSignal(KILLAURA_TAG), KillAura)
-
-Connect(CollectionService:GetInstanceAddedSignal(BRING_TAG), function(Enemy)
-    task.spawn(Bring, Enemy)
-end)
+        for _, Enemy in CollectionService:GetTagged("BasicMob") do NewEnemyAdded(Enemy) end
+        Connect(CollectionService:GetInstanceAddedSignal("BasicMob"), NewEnemyAdded)
+        Connect(CollectionService:GetInstanceAddedSignal(KILLAURA_TAG), KillAura)
+        Connect(CollectionService:GetInstanceAddedSignal(BRING_TAG), Bring)
 
         return EnemiesModule
     end)
@@ -1158,11 +985,9 @@ end)
             BodyVelocity.P = 1000
         end
 
-        BodyVelocity.Parent = HumanoidRootPart
-
         local Highlight = Instance.new("Highlight") do
-            Highlight.FillColor = Color3.fromRGB(255, 255, 255)
-            Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+            Highlight.FillColor = Color3.fromRGB(255, 0, 127)
+            Highlight.OutlineColor = Color3.fromRGB(255, 0, 127)
             Highlight.FillTransparency = 0.3
         end
 
@@ -1243,7 +1068,7 @@ end)
             end
         end
 
-        Connect(RunService.RenderStepped, function()
+        Connect(RunService.Stepped, function()
             if IsAlive() then
                 UpdateVelocityOnStepped(Character)
                 NoClipOnStepped(Character)
@@ -1315,11 +1140,11 @@ end)
             return false
         end
 
-        function Cache:Fruit(High)
+        function Cache:Fruit(IsNotLower)
             local Fruits = {}
 
             for _, v in next, Module:ComF("GetFruits") do
-                if High and v.Price >= 999999 or v.Price <= 999999 then
+                if IsNotLower and v.Price >= 999999 or v.Price <= 999999 then
                     Fruits[v.Name] = v.Price
                 end
             end
@@ -1956,8 +1781,6 @@ end)
         end
 
         function SkillModule:Use()
-            if not Character then return end
-            
             if OnFirstTime then
                 OnFirstTime = false do
                     return Module:Equip("Melee", true) 
@@ -1998,46 +1821,6 @@ end)
             VirtualInputManager:SendKeyEvent(true, Enum.KeyCode[SkillName], false, game)
             task.wait(0.05)
             VirtualInputManager:SendKeyEvent(false, Enum.KeyCode[SkillName], false, game)
-        end
-        
-        local function GetUnCooldownSkill(Name, Select)
-            local ToolContainer = Skills:FindFirstChild(Name)
-            if not ToolContainer then return nil end
-
-            for _, KeyName in ipairs(Select) do
-                local Skill = ToolContainer:FindFirstChild(KeyName)
-                if not Skill or not Skill:IsA("Frame") then continue end
-                if not IsSkillUnlocked(Skill) then continue end
-                if IsSkillOnCooldown(Skill) then continue end
-
-                return KeyName
-            end
-
-            return nil
-        end
-
-        local LAST_SIMPLE = 0
-
-        function SkillModule:Skill(Select)
-            if not Character then return end
-            
-            if not Select or #Select == 0 then return end
-
-            if tick() - LAST_SIMPLE < 0.2 then return end
-
-            local Equipped = Character:FindFirstChildOfClass("Tool")
-            
-            if not Equipped then return end
-
-            local Skill = GetUnCooldownSkill(Equipped.Name, Select)
-            
-            if not Skill then return end
-
-            LAST_SIMPLE = tick()
-
-            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode[Skill], false, game)
-            task.wait(0.05)
-            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode[Skill], false, game)
         end
 
         task.spawn(BindBackpack)
@@ -2264,6 +2047,21 @@ end)
         end)(GetSea())
 
         Data['Shop'] = {
+            ["Fighting Style"] = {
+                ["Buy Black Leg"] = { "BuyBlackLeg" },
+                ["Buy Electro"] = { "BuyElectro" },
+                ["Buy Fishman Karate"] = { "BuyFishmanKarate" },
+                ["Buy Dragon Claw"] = { "BlackbeardReward", "DragonClaw", "2" },
+                ["Buy Superhuman"] = { "BuySuperhuman" },
+                ["Buy Death Step"] = { "BuyDeathStep" },
+                ["Buy Sharkman Karate"] = { "BuySharkmanKarate" },
+                ["Buy Electric Claw"] = { "BuyElectricClaw" },
+                ["Buy Dragon Talon"] = { "BuyDragonTalon" },
+                ["Buy GodHuman"] = { "BuyGodhuman" },
+                ["Buy Sanguine Art"] = { "BuySanguineArt" },
+                ["Buy Divine Art"] = { "BuyDivineArt" },
+            },
+
             ["Ability"] = {
                 ["Buy Geppo"] = { "BuyHaki", "Geppo" },
                 ["Buy Buso"] = { "BuyHaki", "Buso" },
@@ -2360,546 +2158,14 @@ end)
         end
 
         warn("[Bosses] Unknown sea:", tostring(Module.Sea))
-
+        
         return {}
     end)
-
-    AddModule('EspManager', function()
-        local EspManager = {}
-
-        EspManager.__index = EspManager
-
-        EspManager.__newindex = function(self, index, value)
-            if index == "Enabled" then
-                task.spawn(self.ToggleEsp, self, value)
-            else
-                rawset(self, index, value)
-            end
-        end
-
-        local CoreGuiEspFolder = Instance.new("Folder", CoreGui) do
-            CoreGuiEspFolder.Name = "XYN-EspFolder"
-
-            local _EspFolder = CoreGui:FindFirstChild(CoreGuiEspFolder.Name)
-
-            if _EspFolder and _EspFolder ~= CoreGuiEspFolder then
-                _EspFolder:Destroy()
-            end
-        end
-
-        local EspTemplate = Instance.new("BoxHandleAdornment") do
-            local BoxHandleAdornment = EspTemplate
-            BoxHandleAdornment.Size = Vector3.new(1, 0, 1, 0)
-            BoxHandleAdornment.AlwaysOnTop = true
-            BoxHandleAdornment.ZIndex = 10
-            BoxHandleAdornment.Transparency = 0
-
-            local BillboardGui = Instance.new("BillboardGui", BoxHandleAdornment)
-            BillboardGui.Size = UDim2.new(0, 100, 0, 150)
-            BillboardGui.StudsOffset = Vector3.new(0, 2, 0)
-            BillboardGui.AlwaysOnTop = true
-
-            local TextLabel = Instance.new("TextLabel", BillboardGui)
-            TextLabel.BackgroundTransparency = 1
-            TextLabel.Position = UDim2.new(0, 0, 0, -50)
-            TextLabel.Size = UDim2.new(0, 100, 0, 100)
-            TextLabel.TextSize = 10
-            TextLabel.TextStrokeTransparency = 0
-            TextLabel.TextYAlignment = Enum.TextYAlignment.Bottom
-            TextLabel.Text = "..."
-            TextLabel.ZIndex = 15
-            TextLabel.RichText = true
-        end
-
-        local DefaultEspColor = Color3.fromRGB(255, 255, 255)
-        local HumHealth = "%s<font color='rgb(160, 160, 160)'> [ %im ]</font>\n<font color='rgb(25, 240, 25)'>[%i/%i]</font>"
-        local CreatedEsps = {}
-
-        local function GetBasePart(Instance)
-            if Instance:IsA("BasePart") then
-                return Instance
-            elseif Instance:IsA("Model") then
-                return Instance.PrimaryPart or Instance:GetPivot()
-            elseif Instance.Parent:IsA("Model") then
-                return Instance.Parent.PrimaryPart or Instance.Parent:GetPivot()
-            end
-        end
-
-        function EspManager:SetCustomEspDisplay(Action)
-            self.CustomEspDisplay = Action
-            return self
-        end
-
-        function EspManager:SetObjects(Objects)
-            self.GetObjectsAction = Objects
-            return self
-        end
-
-        function EspManager:GetInstance(Action)
-            self.OnlyOneInstanceAction = Action
-            return self
-        end
-
-        function EspManager:SetInstanceName(Instance, Name)
-            self.EspsNames[Instance] = Name
-            return self
-        end
-
-        function EspManager:SetAllInstancesName(Name)
-            self.CustomInstanceName = Name
-            return self
-        end
-
-        function EspManager:WaitChildsAdded()
-            self._WaitChildsAdded = true
-            return self
-        end
-
-        function EspManager:SetEspColor(Action)
-            self.EspColor = Action
-            return self
-        end
-
-        function EspManager:SetAlwaysValidate()
-            self.AlwaysValidateInstance = true
-            return self
-        end
-
-        function EspManager:Validator(Action)
-            self.ValidateInstance = Action
-            return self
-        end
-
-        function EspManager:ChangeEspSize(Size)
-            self.EspSize = Size
-
-            for i = 1, #CreatedEsps do
-                for _, Esp in pairs(CreatedEsps[i].EspObjects) do
-                    Esp.BoxHandleAdornment.BillboardGui.TextLabel.TextSize = Size
-                end
-            end
-
-            return self
-        end
-
-        local BaseESP = "%s<font color='rgb(160, 160, 160)'> [ %im ]</font>"
-
-        function EspManager:StartRunningEsp(Esp)
-            local Instance = Esp.Instance
-            local BoxHandleAdornment = Esp.BoxHandleAdornment
-            local TextLabel = BoxHandleAdornment.BillboardGui.TextLabel
-            local Folder = self.EspFolder
-            local IsModel = Instance:IsA("Model")
-            local CachedBasePart = nil
-
-            while task.wait(Settings.SmoothMode and 0.25 or 0) do
-                if not BoxHandleAdornment or not BoxHandleAdornment.Parent then
-                    return self:Clear(Esp)
-                elseif self.AlwaysValidateInstance and not self.ValidateInstance(Instance) then
-                    return self:Clear(Esp)
-                elseif not Instance:IsDescendantOf(workspace) and not Instance:IsDescendantOf(ReplicatedStorage) then
-                    return self:Clear(Esp)
-                end
-
-                CachedBasePart = CachedBasePart or GetBasePart(Instance)
-
-                if not CachedBasePart then
-                    return self:Clear(Esp)
-                end
-
-                local DistanceValue = math.floor((Module:Distance(CachedBasePart.Position)) / 5)
-                local Humanoider = IsModel and Instance:FindFirstChildOfClass("Humanoid")
-
-                if Humanoider then
-                    TextLabel.Text = HumHealth:format(Instance.Name, DistanceValue, math.floor(Humanoider.Health), math.floor(Humanoider.MaxHealth))
-                elseif self.CustomEspDisplay then
-                    TextLabel.Text = self.CustomEspDisplay(Instance, DistanceValue)
-                else
-                    local Name = self.CustomInstanceName or self.EspsNames[Instance] or Instance.Name
-                    TextLabel.Text = BaseESP:format(Name, DistanceValue)
-                end
-            end
-        end
-
-        function EspManager:Create(Instance)
-            if self.EspObjects[Instance] then return end
-
-            local Esp = {
-                Instance = Instance,
-                BoxHandleAdornment = nil
-            }
-
-            local BoxHandleAdornment = EspTemplate:Clone()
-            local BillboardGui = BoxHandleAdornment.BillboardGui
-            local TextLabel = BillboardGui.TextLabel
-
-            BillboardGui.Adornee = (Instance:IsA("BasePart") or Instance:IsA("Model")) and Instance or Instance.Parent
-            TextLabel.TextColor3 = type(self.EspColor) == "function" and self.EspColor(Instance) or self.EspColor or DefaultEspColor
-            TextLabel.Text = self.CustomInstanceName or "..."
-            TextLabel.TextSize = self.EspSize or TextLabel.TextSize
-            BoxHandleAdornment.Parent = self.EspFolder
-
-            self.EspObjects[Instance] = Esp
-            Esp.BoxHandleAdornment = BoxHandleAdornment
-
-            task.spawn(self.StartRunningEsp, self, Esp)
-
-            return Esp
-        end
-
-        function EspManager:Clear(Esp)
-            if Esp then
-                self.EspObjects[Esp.Instance] = nil
-                if Esp.BoxHandleAdornment then Esp.BoxHandleAdornment:Destroy() end
-            else
-                table.clear(self.EspObjects)
-                self.EspFolder:ClearAllChildren()
-            end
-        end
-
-        function EspManager:ToggleEsp(Value)
-            local Environment = "Xyn_Esp_" .. self.SpecialTag
-            _ENV[Environment] = Value
-
-            if not Value then
-                return self:Clear()
-            end
-
-            while _ENV[Environment] do
-                local ObjectsAction = self.GetObjectsAction
-                local CreatedNew = false
-
-                if self.OnlyOneInstanceAction then
-                    local Instance = self.OnlyOneInstanceAction()
-
-                    if Instance then
-                        self:Create(Instance)
-                    end
-                elseif ObjectsAction then
-                    local Instances
-
-                    if typeof(ObjectsAction) == "function" then
-                        Instances = ObjectsAction()
-                    elseif typeof(ObjectsAction) == "Instance" then
-                        Instances = ObjectsAction:GetChildren()
-                    else
-                        Instances = ObjectsAction
-                    end
-
-                    local Validate = self.ValidateInstance
-                    local CreatedEsps = self.EspObjects
-
-                    for i = 1, #Instances do
-                        local Instance = Instances[i]
-
-                        if not CreatedEsps[Instance] and (not Validate or Validate(Instance)) then
-                            CreatedNew = true
-                            self:Create(Instance)
-                        end
-                    end
-                end
-
-                if not CreatedNew and self._WaitChildsAdded then
-                    ObjectsAction.ChildAdded:Wait()
-                end
-
-                task.wait(0.25)
-            end
-        end
-
-        function EspManager.new(Tag)
-            local EspFolder = Instance.new("Folder", CoreGuiEspFolder)
-            EspFolder.Name = Tag
-
-            local self = setmetatable({
-                SpecialTag = Tag,
-                EspObjects = {},
-                EspsNames = {},
-                EspFolder = EspFolder
-            }, EspManager)
-
-            table.insert(CreatedEsps, self)
-
-            return self
-        end
-
-        return EspManager
-    end)
-
-    AddModule('IndicatorHandler', function()
-        local IndicatorHandler = {}
-        local EspManager = Module.EspManager
-
-        local FLOWERS = {
-            Flower1 = "Blue Flower",
-            Flower2 = "Red Flower",
-        }
-
-        local BERRIES = {
-            "Pink Pig Berry", "Purple Jelly Berry", "Red Cherry Berry",
-            "Blue Icicle Berry", "Green Toad Berry", "Orange Berry",
-            "White Cloud Berry", "Yellow Star Berry",
-        }
-
-        local SPACIALS_ISLAND = {
-            PrehistoricIsland = "Prehistoric Island",
-            KitsuneIsland = "Kitsune Island",
-            MysticIsland = "Mirage Island",
-            FrozenDimension = "Frozen Dimension"
-        }
-
-        local FRUIT_SPAWNERS = { "AppleSpawner", "PineappleSpawner", "BananaSpawner" }
-
-        local function GetText(Text, Dist)
-            if Settings["Distance Indicator"] then
-                return string.format("%s<font color='rgb(160, 160, 160)'> [ %im ]</font>", Text, Dist)
-            end
-
-            return Text
-        end
-
-        local function GetBerryName(Bush)
-            for _, v in Bush:GetAttributes() do
-                if typeof(v) == "string" and table.find(BERRIES, v) then
-                    return v
-                end
-            end
-
-            return "Unknown Berry"
-        end
-
-        local function GetBloxFruitName(Fruit)
-            local Current = Fruit.Name
-            if not Fruit:IsA('Model') then return Current end
-
-            local Idle = Fruit:FindFirstChild('Idle', true)
-            if not Idle then return Current end
-
-            local Id = tostring(Idle.AnimationId)
-            if not Id then return Current end
-
-            local Name = Module.FruitsId[Id]
-            if not Name then return Current end
-
-            return Name .. " [ Spawned ]"
-        end
-
-        local function NewChests()
-            local List = {}
-
-            for _, Chest in CollectionService:GetTagged("_ChestTagged") do
-                if not Chest:GetAttribute("IsDisabled") then
-                    table.insert(List, Chest)
-                end
-            end
-
-            return List
-        end
-
-        local function NewBerry()
-            local List = {}
-
-            for _, Bush in CollectionService:GetTagged("BerryBush") do
-                if next(Bush:GetAttributes()) then
-                    table.insert(List, Bush)
-                end
-            end
-
-            return List
-        end
-
-        local function NewFruits()
-            local List = {}
-
-            for _, SpawnerName in FRUIT_SPAWNERS do
-                local Spawner = workspace:FindFirstChild(SpawnerName)
-
-                if not Spawner then continue end
-
-                for _, v in Spawner:GetChildren() do
-                    if v:IsA("Tool") then
-                        table.insert(List, v)
-                    end
-                end
-            end
-
-            return List
-        end
-
-        local function NewGear()
-            local Gears = {}
-
-            local Mirage = Map:FindFirstChild('MysticIsland')
-
-            if not Mirage then return Gears end
-
-            for _, v in Mirage:GetChildren() do
-                if v:IsA("MeshPart") and v.BrickColor == BrickColor.new('Pastel Blue')  then
-                    table.insert(Gears, v)
-                end
-            end
-
-            return Gears
-        end
-
-        local COLORS = {
-            ["Spacial Island"] = {
-                Colors = Color3.fromRGB(255, 0, 127),
-                Folder = Map,
-                Valid = function(v)
-                    return SPACIALS_ISLAND[v.Name] ~= nil
-                end,
-                CustomName = function(v, Dist)
-                    return GetText(SPACIALS_ISLAND[v.Name] or v.Name, Dist)
-                end,
-            },
-            ["Devil Fruits"] = {
-                Colors = Color3.fromRGB(255, 0, 0),
-                Folder = workspace,
-                Valid = function(v)
-                    return v.Name:find("Fruit") ~= nil
-                end,
-                CustomName = function(v, Dist)
-                    return GetText(GetBloxFruitName(v), Dist)
-                end
-            },
-            ["Sea Beast"] = {
-                Colors = Color3.fromRGB(0, 85, 127),
-                Folder = function()
-                    return SeaBeasts:GetChildren()
-                end,
-                Valid = function(v)
-                    if not v:IsA("Model") then return false end
-                    
-                    local Health = v:FindFirstChild("Health")
-                    
-                    return Health ~= nil and Health.Value > 0
-                end,
-                CustomName = function(v, Dist)
-                    local Health = v:FindFirstChild("Health")
-                    
-                    if not Health then
-                        return GetText("Sea Beast", Dist)
-                    end
-                    
-                    return GetText(string.format("Sea Beast [ %i ]", Health.Value), Dist)
-                end,
-            },
-            ["Flowers"] = {
-                Colors = Color3.fromRGB(255, 170, 255),
-                Folder = workspace,
-                Valid = function(v)
-                    return v.Name:find("Flower") ~= nil
-                end,
-                CustomName = function(v, Dist)
-                    return GetText(FLOWERS[v.Name] or v.Name, Dist)
-                end,
-            },
-            ["Players"] = {
-                Colors = Color3.fromRGB(255, 255, 255),
-                Folder = Characters,
-                Valid = function(v)
-                    local Player = Players:GetPlayerFromCharacter(v)
-                    return Player and Player ~= LocalPlayer
-                end,
-            },
-            ["Chest"] = {
-                Colors = Color3.fromRGB(255, 255, 127),
-                Folder = NewChests,
-                Valid = function(v)
-                    return not v:GetAttribute("IsDisabled")
-                end,
-                CustomName = function(v, Dist)
-                    return GetText("Chest", Dist)
-                end,
-            },
-            ["Berries"] = {
-                Colors = Color3.fromRGB(101, 104, 255),
-                Folder = NewBerry,
-                Valid = function(v)
-                    return next(v:GetAttributes()) ~= nil
-                end,
-                CustomName = function(v, Dist)
-                    return GetText(GetBerryName(v), Dist)
-                end,
-            },
-            ["Fruits"] = {
-                Colors = Color3.fromRGB(0, 255, 127),
-                Folder = NewFruits,
-                Valid = function(v)
-                    return v:IsA("Tool") and v.Parent ~= nil
-                end,
-                CustomName = function(v, Dist)
-                    return GetText(v.Name, Dist)
-                end,
-            },
-            ["Gear"] = {
-                Colors = Color3.fromRGB(85, 255, 255),
-                Folder = NewGear,
-                Valid = function(v)
-                    return v:IsA("MeshPart") and v.Parent ~= nil
-                end,
-                CustomName = function(v, Dist)
-                    return GetText("Gear", Dist)
-                end,
-            },
-            ["Ship"] = {
-                Colors = Color3.fromRGB(115, 169, 255),
-                Folder = Boats,
-                Valid = function(v)
-                    return v.Parent ~= nil
-                end,
-                CustomName = function(v, Dist)
-                    local Owner = v:FindFirstChild("Owner")
-
-                    if Owner and Owner.Value then
-                        return GetText(string.format("%s [ %s ]", v.Name, tostring(Owner.Value)), Dist)
-                    end
-
-                    return GetText(v.Name, Dist)
-                end,
-            },
-        }
-
-        local ESP_HANDLERS = {}
-
-        for Name, Data in COLORS do
-            local Handler = EspManager.new(Name)
-
-            Handler:SetEspColor(Data.Colors)
-
-            if type(Data.Folder) == "function" then
-                Handler:SetObjects(Data.Folder)
-            else
-                Handler:SetObjects(function()
-                    return Data.Folder:GetChildren()
-                end)
-            end
-
-            if Data.Valid then
-                Handler:Validator(Data.Valid)
-                Handler:SetAlwaysValidate()
-            end
-
-            if Data.CustomName then
-                Handler:SetCustomEspDisplay(Data.CustomName)
-            end
-
-            ESP_HANDLERS[Name] = Handler
-        end
-
-        IndicatorHandler["Change"] = function(Value, Select)
-            for Name, Handler in ESP_HANDLERS do
-                Handler.Enabled = Value and table.find(Select, Name) ~= nil
-            end
-        end
-
-        return IndicatorHandler
-    end)
-
+    
     task.spawn(function()
         local SpawnLocations = Module.SpawnLocations
         local EnemyLocations = Module.EnemyLocations
+
         local EnemiesModule = Module.EnemiesModule
 
         local function NewIslandAdded(Island)
@@ -2923,6 +2189,66 @@ end)
         for _, Spawn in EnemySpawns:GetChildren() do NewSpawn(Spawn) end
         Connect(EnemySpawns.ChildAdded, NewSpawn)
         Connect(Locations.ChildAdded, NewIslandAdded)
+
+        local function ShouldStop(Breake)
+            return not _ENV.OnFarm or not IsAlive() or (Breake and Breake())
+        end
+
+        local function WaitAtSpawnPoints(enemyName, spawnPoints, Breake, Teleport)
+            if ShouldStop(Breake) then return end
+
+            for _, spawnCFrame in pairs(spawnPoints) do
+                if ShouldStop(Breake) then return end
+                if Module.EnemiesModule:GetClosestByTag(enemyName) then return end
+
+                Teleport(spawnCFrame)
+
+                local waitStart = tick()
+                local waitDelay = Settings['Wait Enemies Delay'] or 0.75
+
+                while tick() - waitStart < waitDelay do
+                    if ShouldStop(Breake) then return end
+                    if Module.EnemiesModule:GetClosestByTag(enemyName) then return end
+
+                    task.wait(0.1)
+                end
+
+                if Module.EnemiesModule:GetClosestByTag(enemyName) then
+                    return
+                end
+
+            end
+
+            if not ShouldStop(Breake) and not Module.EnemiesModule:GetClosestByTag(enemyName) then
+                WaitAtSpawnPoints(enemyName, spawnPoints, Breake, Teleport)
+            end
+        end
+
+        local function WaitForEnemySpawn(Name, Breake, Teleport)
+            if ShouldStop(Breake) then return end
+
+            local enemyNames = type(Name) == "table" and Name or {Name}
+
+            for _, enemyName in ipairs(enemyNames) do
+                if ShouldStop(Breake) then return end
+                if Module.EnemiesModule:GetClosestByTag(enemyName) then return end
+
+                if Module.EnemiesModule:IsSpawned(enemyName) then
+                    local spawnPoints = EnemyLocations[enemyName]
+
+                    if spawnPoints then
+                        WaitAtSpawnPoints(enemyName, spawnPoints, Breake, Teleport)
+                    end
+                end
+
+                if ShouldStop(Breake) then return end
+                if Module.EnemiesModule:GetClosestByTag(enemyName) then return end
+            end
+        end
+
+        function Module:WaitForEnemy(Name, Breake, Teleport)
+            return WaitForEnemySpawn(Name, Breake, Teleport)
+        end
     end)
 
     task.defer(function()
@@ -2955,7 +2281,7 @@ end)
                         local arg1, arg2 = ...
 
                         if method == "InvokeServer" and arg1 == 'X' and typeof(arg2) == 'Vector3' and self.Name == "" then
-                            if Module.Aimbot:Check() or (_ENV.GLOBALS_SETTINGS['Skill Usage'] and _ENV.__XYN_TARGETER) then
+                            if Module.Aimbot:Check() then
                                 return _Old(self, arg1, _ENV.Target)
                             end
 
@@ -2963,7 +2289,7 @@ end)
                         end
 
                         if method == "FireServer" and self.Name == "RemoteEvent" and typeof(arg1) == "Vector3" and arg2 == nil then
-                            if Module.Aimbot:Check() or (_ENV.GLOBALS_SETTINGS['Skill Usage'] and _ENV.__XYN_TARGETER) then
+                            if Module.Aimbot:Check() then
                                 return _Old(self, _ENV.Target)
                             end
 
@@ -2976,6 +2302,10 @@ end)
 
                 _ENV.xyn_original = _Old
             end
+
+            --local EffectsLocalThread: LocalScript = PlayerScripts.EffectsLocalThread do
+            --    EffectsLocalThread.Disabled = true 
+            --end 
         end
     end)
 
