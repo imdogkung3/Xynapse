@@ -77,7 +77,7 @@ AddModule("Configurations", function()
 
     Configurations.Files = Files or "XYN"
     Configurations.Set = `{Files}/settings`
-    Configurations.FullPaths = `{Configurations.Set}/{PlaceId}.json`
+    Configurations.FullPaths = `{Configurations.Set}/{game.PlaceId}.json`
     Configurations.Paths = { Files, Configurations.Set }
 
     do
