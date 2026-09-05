@@ -8,7 +8,7 @@ return(function(Installer)
         Enemies = {}
     }
 
-    local Owner = "imdogkung3"
+    local Owner = "vita6it"
     local Repository = "Xynapse"
 
     local Configuration = Installer.Configurations
@@ -1033,7 +1033,7 @@ return(function(Installer)
         BodyVelocity.Parent = HumanoidRootPart
 
         local Highlight = Instance.new("Highlight") do
-            Highlight.FillColor = Color3.fromRGB(255, 255, 255)
+            Highlight.FillColor = Color3.fromRGB(0, 170, 255)
             Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
             Highlight.FillTransparency = 0.3
         end
@@ -1970,18 +1970,6 @@ return(function(Installer)
         end
 
         return TweenCreator
-    end)
-
-    AddModule("Colors", function()
-        return function(text, color)
-            if type(text) == "string" and typeof(color) == "Color3" then
-                local r, g, b = math.floor(color.R * 255), math.floor(color.G * 255), math.floor(color.B * 255)
-
-                return string.format('<font color="rgb(%d, %d, %d)">%s</font>', r, g, b, text)
-            end
-
-            return text
-        end
     end)
 
     AddModule("Data", function()
