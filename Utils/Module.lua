@@ -75,10 +75,10 @@ AddModule("Configurations", function()
     local readfile = readfile or function( ... ) return ... end
     local isfile = isfile or function( ... ) return ... end
 
-    Configurations.FullPaths = `{Configurations.Set}/{PlaceId}.json`
-    Configurations.Paths = { Files, Configurations.Set }
     Configurations.Files = Files or "XYN"
     Configurations.Set = `{Files}/settings`
+    Configurations.FullPaths = `{Configurations.Set}/{PlaceId}.json`
+    Configurations.Paths = { Files, Configurations.Set }
 
     do
         function Configurations:Folder()
