@@ -36,7 +36,7 @@ local HumanoidsCache do
                 end
                 COUNT_NEWINDEX = 0
             end
-            
+
             COUNT_NEWINDEX += 1
             return rawset(self, index, value)
         end
@@ -50,7 +50,7 @@ local HumanoidsCache do
             return Humanoid
         end
     end
-    
+
     HumanoidsCache = setmetatable({}, Metatable)
 end
 
@@ -83,7 +83,7 @@ local function CheckPlayerAlly(Target)
     if Target.Parent == Characters then
         Target = Players:GetPlayerFromCharacter(Target)
     end
-    
+
     if not Target then return false end
 
     if tostring(Target.Team) == "Marines" and Target.Team == Player.Team then
@@ -155,7 +155,7 @@ local GunClient = (function()
         for index = 1, #CurrentBladeHits do
             local Hit = CurrentBladeHits[index]
             local Dist = (MyRootPartPosition - Hit[2].Position).Magnitude
-            
+
             if Dist < MinDist then
                 MinDist = Dist
                 Hitbox, Target = Hit[2], Hit[1]
@@ -251,7 +251,7 @@ local GunClient = (function()
         setupvalue(SHOOT_FUNCTION, 18, v7)
 
         local r1, r2 = math.floor(v9 / v4 * 16777215), v7
-        
+
         return r1, r2
     end
 
@@ -351,17 +351,17 @@ local GunClient = (function()
             end
         end
     end
-    
+
     function GunClient:FireTarget(Equipped, Character)
         if not Character then return end
-        
+
         local Cooldown = Equipped:FindFirstChild("Cooldown")
         local Current = Cooldown and Cooldown.Value or 0.3
 
         if (tick() - self.Debounce) >= Current then
             self.Equipped = Equipped
             self.Debounce = tick()
-            
+
             MyRootPartPosition = Character:GetPivot().Position
 
             if SUCCESS_SHOOT and SHOOT_FUNCTION then
