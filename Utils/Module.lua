@@ -370,54 +370,12 @@ AddModule("Parallels", function()
     return Parallels
 end)
 
-AddModule("Asset", function()
-    local Asset = {}
-
-    local getcustomasset = getcustomasset or function(...) return ... end
-
-    local saved = {}
-
-    function Asset:Download(url, filename)
-        local data = game:HttpGet(url)
-
-        writefile(filename, data)
-
-        saved[filename] = data
-
-        return data
-    end
-
-    function Asset:Get(filename)
-        if saved[filename] then
-            return getcustomasset(filename)
-        end
-
-        if isfile(filename) then
-            saved[filename] = readfile(filename)
-            return getcustomasset(filename)
-        end
-
-        return 0
-    end
-
-    do
-        local Constant = "XYNAPSE404.png"
-        
-        if not isfile(Constant) then
-            Asset:Download("https://raw.githubusercontent.com/vita6it/Xynapse/main/Assests/Cutie.png", Constant) 
-        end
-    end
-
-    return Asset
-end)
-
 AddModule("Plugins", function()
     local Plugins = {}
     
     local Configurations = Utils.Configurations
     local Parallels = Utils.Parallels
     local Others = Utils.Others
-    local Asset = Utils.Asset
     
     local Enabled, Options = Parallels.Options()
     local Library = fetch('Utils/Library.lua')
@@ -536,22 +494,6 @@ AddModule("Plugins", function()
             Icon = Info[3] or nil,
             Text = Info[4] or nil
         })
-    end
-    
-    function Plugins:Community()
-        local Community = Plugins:NewPage(115960025411300) do
-            local _1 = Plugins:Section(Community, { "Community", Color3.fromRGB(85, 255, 127) }) do
-                local Banner = Asset:Get("XYNAPSE404.png") do
-                    Community:Banner(Banner or 133959433736215) 
-                end
-                
-                Plugins:Button(_1, { "Discord", "Join our community" }, function()
-                    pcall(setclipboard, "https://discord.com/invite/5f5dQeT4Yx")
-                end)
-            end
-        end
-        
-        return Community:Navative()
     end
     
     function Plugins:Managers()
