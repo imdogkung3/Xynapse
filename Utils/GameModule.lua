@@ -1035,7 +1035,7 @@ return(function(Installer)
         local Highlight = Instance.new("Highlight") do
             Highlight.FillColor = Color3.fromRGB(0, 170, 255)
             Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-            Highlight.FillTransparency = 0.3
+            Highlight.FillTransparency = 0.5
         end
 
         if _ENV.tween_bodyvelocity then
