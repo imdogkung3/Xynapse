@@ -226,13 +226,13 @@ local GunClient = (function()
     end
 
     function GunClient:GetValidator2()
-        local v1 = getupvalue(SHOOT_FUNCTION, 15)
-        local v2 = getupvalue(SHOOT_FUNCTION, 13)
-        local v3 = getupvalue(SHOOT_FUNCTION, 16)
-        local v4 = getupvalue(SHOOT_FUNCTION, 17)
-        local v5 = getupvalue(SHOOT_FUNCTION, 14)
-        local v6 = getupvalue(SHOOT_FUNCTION, 12)
-        local v7 = getupvalue(SHOOT_FUNCTION, 18)
+        local v1 = getupvalue(SHOOT_FUNCTION, 16)
+        local v2 = getupvalue(SHOOT_FUNCTION, 14)
+        local v3 = getupvalue(SHOOT_FUNCTION, 17)
+        local v4 = getupvalue(SHOOT_FUNCTION, 18)
+        local v5 = getupvalue(SHOOT_FUNCTION, 15)
+        local v6 = getupvalue(SHOOT_FUNCTION, 13)
+        local v7 = getupvalue(SHOOT_FUNCTION, 19)
 
         local v8 = v6 * v2
         local v9 = (v5 * v2 + v6 * v1) % v3
@@ -242,13 +242,13 @@ local GunClient = (function()
         v6 = v9 - v5 * v3
         v7 = v7 + 1
 
-        setupvalue(SHOOT_FUNCTION, 15, v1)
-        setupvalue(SHOOT_FUNCTION, 13, v2)
-        setupvalue(SHOOT_FUNCTION, 16, v3)
-        setupvalue(SHOOT_FUNCTION, 17, v4)
-        setupvalue(SHOOT_FUNCTION, 14, v5)
-        setupvalue(SHOOT_FUNCTION, 12, v6)
-        setupvalue(SHOOT_FUNCTION, 18, v7)
+        setupvalue(SHOOT_FUNCTION, 16, v1)
+        setupvalue(SHOOT_FUNCTION, 14, v2)
+        setupvalue(SHOOT_FUNCTION, 17, v3)
+        setupvalue(SHOOT_FUNCTION, 18, v4)
+        setupvalue(SHOOT_FUNCTION, 15, v5)
+        setupvalue(SHOOT_FUNCTION, 13, v6)
+        setupvalue(SHOOT_FUNCTION, 19, v7)
 
         local r1, r2 = math.floor(v9 / v4 * 16777215), v7
 
