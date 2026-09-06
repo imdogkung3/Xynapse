@@ -372,36 +372,65 @@ end)
 
 AddModule("Plugins", function()
     local Plugins = {}
-
+    
     local Configurations = Utils.Configurations
     local Parallels = Utils.Parallels
     local Others = Utils.Others
-
+    
     local Enabled, Options = Parallels.Options()
     local Library = fetch('Utils/Library.lua')
-
+    
     function Plugins:Window(Info)
-        self.Base = Library:Application("Next.js", {
-            Title = Info[1],
-            Footer = Info[2],
-            Logo = Info[3]
+        self['Base'] = Library:Application("Next.js", {
+            Title = Info[1] or "Xynapse",
+            Footer = Info[2] or "Made by imdogkung3",
+            Logo = Info[3] or 124715602753920
         })
-
-        return self.Base
+        
+        return self['Base']
     end
-
+    
     function Plugins:NewPage(Info)
-        return self.Base:MakeTab({
+        local Page = self['Base']:MakeTab({
             Title = Info[1],
-            Description = Info[2],
+            Description = Info[2] or "Automatically",
             Icon = Info[3]
         })
+        
+        local Proxy = {}
+        
+        function Proxy:Section(Name, Callback)
+            local Element = Page[Name]
+            
+            if not Element then
+                Element = Page:Section(Name)
+                rawset(Page, Name, Element)
+            end
+            
+            if Callback then
+                Callback(Element)
+            end
+            
+            return Element
+        end
+        
+        setmetatable(Proxy, {
+            __index = function(self, Index)
+                return Page[Index]
+            end,
+            
+            __newindex = function(self, Index, Value)
+                rawset(Page, Index, Value)
+            end
+        })
+        
+        return Proxy
     end
-
+    
     function Plugins:Section(Page, Info)
         return Page:Section(Info[1])
     end
-
+    
     function Plugins:Button(Section, Info, Callback)
         return Section:Button({
             Title = Info[1],
@@ -410,7 +439,7 @@ AddModule("Plugins", function()
             Callback = Callback
         })
     end
-
+    
     function Plugins:Toggle(Section, Info, Flag, Callback)
         local Thread = nil
 
@@ -418,19 +447,16 @@ AddModule("Plugins", function()
             Title = Info[1],
             Description = Info[2],
             Value = Settings[Flag],
-
             Callback = function(_, value)
                 _ENV.GLOBALS_SETTINGS[Flag] = value
-
+                
                 Settings[Flag] = value
                 Configurations:Save(Flag, value)
                 Enabled[Flag] = value
 
                 if value then
                     Thread = task.spawn(function()
-                        if Threads[Flag] then
-                            Threads[Flag](Settings[Flag])
-                        end
+                        if Threads[Flag] then Threads[Flag](Settings[Flag]) end
                     end)
                 else
                     if Thread then
@@ -439,9 +465,7 @@ AddModule("Plugins", function()
                     end
                 end
 
-                if Callback then
-                    Callback(value)
-                end
+                if Callback then Callback(value) end
             end
         })
 
@@ -456,88 +480,100 @@ AddModule("Plugins", function()
             Max = Value[2],
             Rounding = Value[3],
             Value = Settings[Flag],
-
             Callback = function(_, value)
                 Settings[Flag] = value
                 Configurations:Save(Flag, value)
                 _ENV.GLOBALS_SETTINGS[Flag] = value
-
-                if Callback then
-                    Callback(value)
-                end
+                
+                if Callback then Callback(value) end
             end
         })
     end
-
+    
     function Plugins:Dropdown(Section, Info, List, Flag, Callback)
         return Section:Dropdown({
-            Title = Info,
+            Title = Info[1],
+            Description = Info[2],
             Value = Settings[Flag] or "None",
             List = List,
-
             Callback = function(_, value)
                 Settings[Flag] = value
                 Configurations:Save(Flag, value)
                 _ENV.GLOBALS_SETTINGS[Flag] = value
 
-                if Callback then
-                    Callback(value)
-                end
+                if Callback then Callback(value) end
             end
         })
     end
-
+    
     function Plugins:Input(Section, Info, Flag, Callback)
         return Section:Textbox({
             Title = Info[1],
             Description = Info[2],
             Value = Settings[Flag] or "None",
-
             Callback = function(_, value)
                 Settings[Flag] = value
                 Configurations:Save(Flag, value)
                 _ENV.GLOBALS_SETTINGS[Flag] = value
 
-                if Callback then
-                    Callback(value)
-                end
+                if Callback then Callback(value) end
             end
         })
     end
-
+    
     function Plugins:TextLabel(Section, Info)
         return Section:Paragraph({
             Title = Info[1],
             Description = Info[2]
         })
     end
-
+    
     function Plugins:Managers()
-        local Managers = Plugins:NewPage({ "Managers", "Extension", 134261589888025 }) do
+        local Managers = Plugins:NewPage({
+            "Managers", "Extension", 134261589888025
+        }) do
             Managers:Section("Server", function(self)
                 Configurations:Default("JobId", JobId)
 
-                Plugins:Input(self, { "JobId", "Put the job id." }, 'JobId')
+                Plugins:Input(self, {
+                    "JobId",
+                    "Put the job id."
+                }, "JobId")
 
-                Plugins:Button(self, { "Join", "Connect to the server using the provided JobId." }, function()
-                    Others.Server:Join(Settings['JobId'])
+                Plugins:Button(self, {
+                    "Join",
+                    "Connect to the server using the provided JobId."
+                }, function()
+                    Others.Server:Join(Settings["JobId"])
                 end)
 
-                Plugins:Button(self, { "Change", "Teleport to a different public server instance." }, function()
+                Plugins:Button(self, {
+                    "Change",
+                    "Teleport to a different public server instance."
+                }, function()
                     Others.Server:Change()
                 end)
 
-                Plugins:Button(self, { "Rejoin", "Reconnect to the current server instance." }, function()
+                Plugins:Button(self, {
+                    "Rejoin",
+                    "Reconnect to the current server instance."
+                }, function()
                     Others.Server:Rejoin()
                 end)
             end)
             
             Managers:Section("Optimization", function(self)
-                Plugins:Toggle(self, { "White Screen", "Disabled 3D Rendering to improve performance" }, "White Screen", function(value)
+                Plugins:Toggle(self, {
+                    "White Screen",
+                    "Disabled 3D Rendering to improve performance"
+                }, "White Screen", function(value)
                     Others.Optimize:Set3d(value)
                 end)
 
-                Plugins:Button(self, { "Fast Mode", "Set graphics quality to low" }, function()
+                Plugins:Button(self, {
+                    "Fast Mode",
+                    "Set graphics quality to low"
+                }, function()
                     Others.Optimize:Low()
                 end)
             end)
@@ -545,20 +581,31 @@ AddModule("Plugins", function()
             Managers:Section("Configurations", function(self)
                 local Mobile = if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then true else false
                 
-                Configurations:Default("Interface Scaler", Mobile and 1 or 1.45)
+                Configurations:Default(
+                    "Interface Scaler",
+                    Mobile and 1 or 1.45
+                )
                 
-                Plugins:Slider(self, { "Interface Scaler", "Set interface scale." }, { 1, 2, 2 }, "Interface Scaler", function(value)
+                Plugins:Slider(self, {
+                    "Interface Scaler",
+                    "Set interface scale."
+                }, {
+                    1, 2, 2
+                }, "Interface Scaler", function(value)
                     Plugins.Base:SetScale(value)
                 end)
                 
-                Plugins:Button(self, { "Remove Worksapce", "Reset save setting file to default value." }, function()
+                Plugins:Button(self, {
+                    "Remove Worksapce",
+                    "Reset save setting file to default value."
+                }, function()
                     local Files = Configurations.FullPaths
 
                     if Files and isfile(Files) then
                         pcall(delfile, Configurations.FullPaths)
-                        warn('Remove Success')
+                        warn("Remove Success")
                     else
-                        warn('File not found')
+                        warn("File not found")
                     end
                 end)
             end)
