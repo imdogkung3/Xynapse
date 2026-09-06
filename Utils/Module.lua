@@ -490,9 +490,9 @@ AddModule("Plugins", function()
         })
     end
     
-    function Plugins:Dropdown(Section, Info, List, Flag, Callback)
+    function Plugins:Dropdown(Section, Title, List, Flag, Callback)
         return Section:Dropdown({
-            Title = Info[1],
+            Title = Title,
             Value = Settings[Flag] or "None",
             List = List,
             Callback = function(_, value)
