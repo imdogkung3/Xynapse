@@ -381,7 +381,7 @@ AddModule("Plugins", function()
     local Library = fetch('Utils/Library.lua')
     
     function Plugins:Window(Info)
-        self['Base'] = Library:Application("Next.js", {
+        self['Base'] = Library.Application("Next.js", {
             Title = Info[1] or "Xynapse",
             Footer = Info[2] or "Made by imdogkung3",
             Logo = Info[3] or 124715602753920
