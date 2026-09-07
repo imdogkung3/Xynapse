@@ -135,6 +135,20 @@ return(function(Installer)
         return false
     end
 
+    function Module:MatchString(v1, v2)
+        local String = tostring(v1)
+
+        if type(v2) == "string" then
+            return String:find(v2, 1, true) ~= nil
+        end
+
+        for _, v in v2 do
+            if String:find(v, 1, true) ~= nil then
+                return true
+            end
+        end
+    end
+
     local function IsAlive()
         if not Character then return end
 
