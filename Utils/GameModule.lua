@@ -698,6 +698,33 @@ return(function(Installer)
             return Data
         end
 
+        function Quest:GetQuestName()
+            local Frame = PlayerGui:FindFirstChild("TrackedQuestFrame")
+            if not Frame then return end
+
+            local Container = Frame:FindFirstChild("Frame")
+            if not Container then return end
+
+            local Header = Container:FindFirstChild("header")
+            if not Header then return end
+
+            local Label = Header:FindFirstChild("textLabel")
+            if not Label then return end
+
+            return Label.Text
+        end
+
+        function Quest:IsOnQuest()
+            return self:GetQuestName() ~= nil
+        end
+
+        function Quest:MatchQuest(Monsters)
+            local QuestName = self:GetQuestName()
+            if not QuestName then return false end
+
+            return Module:MatchString(QuestName, Monsters)
+        end
+
         return Quest
     end)
 
