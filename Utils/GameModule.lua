@@ -1213,9 +1213,8 @@ return(function(Installer)
             return false
         end
 
-        function Cache:HaveFruit(Character, Backpack)
-            Character = Character or Player.Character
-            Backpack = Backpack or Player:FindFirstChildOfClass("Backpack")
+        function Cache:HaveFruit()
+            if not IsAlive() then return end
 
             return self:HasFruit(Character) or self:HasFruit(Backpack)
         end
@@ -1306,16 +1305,11 @@ return(function(Installer)
             end
         end
 
-        function Cache:HaveItem(Name, Character, Backpack)
+        function Cache:HaveItem(Name)
+            if not IsAlive() then return end
+
             if self.Unlocked[Name] then
                 return true
-            end
-
-            Character = Character or Player.Character
-            Backpack = Backpack or Player:FindFirstChildOfClass("Backpack")
-
-            if not Character or not Backpack then
-                return false
             end
 
             return Character:FindFirstChild(Name) or Backpack:FindFirstChild(Name)
