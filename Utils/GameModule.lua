@@ -605,7 +605,7 @@ return(function(Installer)
                     local Level = mission.LevelReq
                     local Monster, Value = next(mission.Task)
 
-                    if Level >= Maximum[1] and Level < Maximum[2] and CurrentLevel >= Level and (Value > 1 or (Value == 1 and EnemiesModule:GetClosestByTag(Monster))) then
+                    if Level >= Maximum[1] and Level < Maximum[2] and CurrentLevel >= Level and (Value > 1 or (Value == 1 and Module.EnemiesModule:GetClosestByTag(Monster))) then
 
                         table.insert(Levels, Level)
 
