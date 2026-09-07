@@ -191,21 +191,7 @@ return(function(Installer)
         end
 
         function Module:IsPortal()
-            return GetSea() ~= 3 or self:HaveItem('Valkyrie Helm')
-        end
-
-        function Module:HaveItem(name)
-            if not IsAlive() then return end
-
-            local Inventory = Module:ComF("getInventoryWeapons")
-
-            for _, v in pairs(Inventory) do
-                if v.Name == name then
-                    return v
-                end
-            end
-
-            return Character:FindFirstChild(name) or Backpack:FindFirstChild(name)
+            return GetSea() ~= 3 or Module:ComF("GetUnlockables").DefeatedIndraTrueForm
         end
 
         function Module:Equip(Name, Tooltip)
@@ -1182,6 +1168,7 @@ return(function(Installer)
                 __index = function(_, key)
                     return Cache._CountData[key] or 0
                 end,
+                
                 __newindex = function(_, key, value)
                     local old = Cache._CountData[key] or 0
 
@@ -1210,17 +1197,15 @@ return(function(Installer)
             end
         end
 
-        function Cache:HaveFruit()
-            if not IsAlive() then return end
+        function Cache:HasFruit(Container)
+            if not Container then return false end
 
-            for _, v in Backpack:GetChildren() do
-                if string.find(v.Name,"Fruit") then
-                    return true
-                end
-            end
+            local Objects = Container:GetChildren()
 
-            for _, v in Character:GetChildren() do
-                if string.find(v.Name,"Fruit") then
+            for i = 1, #Objects do
+                local Object = Objects[i]
+
+                if Object.Name:find("Fruit") then
                     return true
                 end
             end
@@ -1228,64 +1213,91 @@ return(function(Installer)
             return false
         end
 
-        function Cache:Fruit(High)
-            local Fruits = {}
+        function Cache:HaveFruit(Character, Backpack)
+            Character = Character or Player.Character
+            Backpack = Backpack or Player:FindFirstChildOfClass("Backpack")
 
-            for _, v in next, Module:ComF("GetFruits") do
-                if High and v.Price >= 999999 or v.Price <= 999999 then
-                    Fruits[v.Name] = v.Price
+            return self:HasFruit(Character) or self:HasFruit(Backpack)
+        end
+
+        function Cache:GetFruits(IsHigh)
+            local Collects, Threshold = {}, 999999
+            local Fruits = Module:ComF("GetFruits")
+
+            for _, Fruit in pairs(Fruits) do
+                local Price = Fruit.Price or 0
+                local Name = Fruit.Name or "Unknow"
+
+                if (Price >= Threshold) == IsHigh then
+                    Collects[Name] = Price
                 end
             end
 
-            return Fruits
-        end 
+            return Collects
+        end
 
-        function Cache:Search(High)
-            local MaxValue, Fruits = math.huge, nil
-            local List = self:Fruit(High)
+        function Cache:GetFruit(IsHigh)
+            local Target, Lowest = nil, math.huge
+            local Fruits = self:GetFruits(IsHigh)
 
-            for _, v in Module:ComF("getInventory") do
-                if v['Type'] ~= "Blox Fruit" then continue end
+            for _, RawItem in self.Items do
+                local Item = RawItem.details or RawItem
+                local Value = Fruits[Item.Name]
 
-                for Name, Value in List do
-                    if v.Name ~= Name then continue end
-
-                    if tonumber(Value) < tonumber(MaxValue) then
-                        MaxValue = Value
-                        Fruits = Name
-                    end
+                if Value and Value < Lowest then
+                    Lowest, Target = Value, Item.Name
                 end
             end
 
-            return Fruits
+            return Target
         end
 
-        function Cache:UnStore(IsHigh)
-            local Fruits = self:Search(IsHigh)
+        function Cache:LoadFruit(IsHigh)
+            if self:HaveFruit() then return end
 
-            if self:HaveFruit() or not Fruits then return end
+            local Fruit = self:GetFruit(IsHigh)
 
-            return Module:ComF("LoadFruit", Fruits)
+            if not Fruit then return end
+
+            return Module:ComF("LoadFruit", Fruit)
         end
 
-        function Cache:UpdateItem(item)
-            if type(item) == "table" then
-                if item.Type == "Wear" then
-                    item.Type = "Accessory"
+        function Cache:UpdateItem(Item)
+            if type(Item) == "table" then
+                local Details = Item.details or Item
+
+                if Details.Type == "Wear" then
+                    Details.Type = "Accessory"
                 end
 
-                local Name = item.Name
+                local Name = Details.Name do
+                    if not Name then return end
 
-                self.Items[Name] = item
+                    self.Items[Name] = Item
+                end
 
-                if not self.Unlocked[Name] then self.Unlocked[Name] = true end
-                if item.Count then self.Count[Name] = item.Count end
-                if item.Mastery then self.Mastery[Name] = item.Mastery end
-                if item.MasteryRequirements then self.MasteryRequirements[Name] = item.MasteryRequirements end
+                if not self.Unlocked[Name] then
+                    self.Unlocked[Name] = true
+                end
+
+                if Details.Count then
+                    self.Count[Name] = Details.Count
+                end
+
+                if Details.Mastery then
+                    self.Mastery[Name] = Details.Mastery
+                end
+
+                if Details.MasteryRequirements then
+                    self.MasteryRequirements[Name] = Details.MasteryRequirements
+                end
             end
         end
 
-        function Cache:RemoveItem(ItemName)
+        function Cache:RemoveItem(Item)
+            local Details = type(Item) == "table" and (Item.details or Item) or nil
+            local ItemName = Details and Details.Name or Item
+
             if type(ItemName) == "string" then
                 self.Unlocked[ItemName] = nil
                 self.Mastery[ItemName] = nil
@@ -1294,29 +1306,113 @@ return(function(Installer)
             end
         end
 
-        local function OnClientEvent(Method, ...)
-            if Method == "ItemChanged" then
-                Cache:UpdateItem(...)
-            elseif Method == "ItemAdded" then
-                Cache:UpdateItem(...)
-            elseif Method == "ItemRemoved" then
-                Cache:RemoveItem(...)
+        function Cache:HaveItem(Name, Character, Backpack)
+            if self.Unlocked[Name] then
+                return true
             end
+
+            Character = Character or Player.Character
+            Backpack = Backpack or Player:FindFirstChildOfClass("Backpack")
+
+            if not Character or not Backpack then
+                return false
+            end
+
+            return Character:FindFirstChild(Name) or Backpack:FindFirstChild(Name)
         end
 
         task.spawn(function()
-            Connect(CommE.OnClientEvent, OnClientEvent)
+            local Replication, Keys, ItemConfig = nil, nil, nil do
+                local Ok, Result = pcall(require, ReplicatedStorage.ItemReplicationService)
 
-            local InventoryItems = nil
+                if Ok and type(Result) == "table" then
+                    Replication = Result
+
+                    local OkKeys, ResultKeys = pcall(require, ReplicatedStorage.ItemReplicationService.KEYS)
+
+                    if OkKeys and type(ResultKeys) == "table" then
+                        Keys = ResultKeys
+                    end
+                end
+
+                local OkConfig, ResultConfig = pcall(require, ReplicatedStorage.ItemConfig)
+
+                if OkConfig and type(ResultConfig) == "table" then
+                    ItemConfig = ResultConfig
+                end
+            end
+
+            local function Resolve(ItemId)
+                if not ItemConfig then return nil end
+
+                local Ok, Conf = pcall(function()
+                    return ItemConfig.match(ItemId):asNullable()
+                end)
+
+                if not Ok or type(Conf) ~= "table" or type(Conf.Index) ~= "table" then
+                    return nil
+                end
+
+                return Conf.Index.StorageKey, Conf.Index.Type
+            end
+
+            local Cached = {}
+
+            local function SyncReplication()
+                if not Replication or not Keys then return end
+
+                local Seen, Completed = {}, true
+
+                for _, Set in {
+                    { Key = Keys.MASTERY, Field = "Mastery" },
+                    { Key = Keys.QUANTITY, Field = "Count" }
+                } do
+                    local Ok, Items = pcall(function()
+                        return Replication:GetItems(Set.Key)
+                    end)
+
+                    if Ok and type(Items) == "table" then
+                        for _, Entry in Items do
+                            local Name, Type = Resolve(Entry.ItemId)
+
+                            if Name then
+                                Seen[Name] = true
+
+                                if Cached[Name] and Cached[Name][Set.Field] == Entry.Value then
+                                    continue
+                                end
+
+                                Cached[Name] = Cached[Name] or {}
+                                Cached[Name][Set.Field] = Entry.Value
+
+                                local Item = {
+                                    Name = Name,
+                                    Type = Type
+                                }
+
+                                Item[Set.Field] = Entry.Value
+                                Cache:UpdateItem(Item)
+                            end
+                        end
+                    else
+                        Completed = false
+                    end
+                end
+
+                if Completed then
+                    for Name in Cache.Items do
+                        if not Seen[Name] then
+                            Cached[Name] = nil
+                            Cache:RemoveItem(Name)
+                        end
+                    end
+                end
+            end
 
             repeat
-                task.wait(1)
-                InventoryItems = Module:ComF("getInventory")
-            until type(InventoryItems) == "table"
-
-            for index = 1, #InventoryItems do
-                Cache:UpdateItem(InventoryItems[index])
-            end
+                SyncReplication()
+                task.wait(0.1)
+            until not (Replication and Keys and ItemConfig)
         end)
 
         return Cache
