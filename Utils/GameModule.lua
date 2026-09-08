@@ -178,6 +178,10 @@ return(function(Installer)
     end
 
     do
+        function Module:Unit(BasePart)
+            return (BasePart.Position - HumanoidRootPart.Position).Unit
+        end
+
         function Module:IsAlive(Character)
             return Character and Character:FindFirstChild("Humanoid") and Character:FindFirstChild("HumanoidRootPart") and Character.Humanoid.Health > 0
         end
@@ -993,7 +997,7 @@ return(function(Installer)
         return EnemiesModule
     end)
 
-    AddModule("Signal, function()
+    AddModule("Signal", function()
         local Signal = {}
         local Connection = {}
 
@@ -1543,6 +1547,36 @@ return(function(Installer)
             end
 
             return Nearest
+        end
+
+        function Workspace:GetGift()
+            for _, v in WorldOrigin:GetChildren() do
+                if v.Name ~= "Present" then continue end
+
+                local Name = v:FindFirstChild('Value', true)
+
+                if not Name then continue end
+
+                if tostring(Name.Value) == LocalPlayer.Name then
+                    return v
+                end
+            end
+        end
+
+        function Workspace:ParseTime(timeText)
+            local hours, minutes, seconds = timeText:match("(%d+):(%d+):(%d+)")
+
+            if hours and minutes and seconds then
+                return tonumber(hours) * 3600 + tonumber(minutes) * 60 + tonumber(seconds)
+            end
+
+            local mins, secs = timeText:match("(%d+):(%d+)")
+
+            if mins and secs then
+                return tonumber(mins) * 60 + tonumber(secs)
+            end
+
+            return 0
         end
 
         function Workspace:ValidColors(Part)
