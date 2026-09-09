@@ -386,7 +386,7 @@ AddModule("Plugins", function()
     
     function Plugins:Window(Info)
         self.Base = Fetching:Window({
-            Logo = Info[3],
+            Logo = Info[1],
             Size = UDim2.new(0, 500, 0, 375),
             MainColor = Color3.fromRGB(0, 170, 255),
             DropColor = Color3.fromRGB(105, 94, 255),
